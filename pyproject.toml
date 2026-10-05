@@ -1,0 +1,33 @@
+[project]
+name = "minideck"
+version = "1.0.0"
+description = "Control remoto tipo Stream Deck para tu PC/Mac desde el navegador del móvil"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Samons" }]
+
+[project.urls]
+Homepage = "https://github.com/SamonsLol/minideck"
+Issues = "https://github.com/SamonsLol/minideck/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["server"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["server"]
+extend-exclude = ["buildenv", "mientorno", "samons", ".venv", "build/work", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP"]
+ignore = [
+    "E402",   # imports tras la guarda de plataforma (raise ImportError) son intencionados
+    "B008",
+    "UP007",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["actions", "auth", "main", "paths", "version"]

@@ -1,0 +1,41 @@
+name: 🐞 Bug
+description: Algo no funciona como debería
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: ¿Qué pasa?
+      description: Qué esperabas y qué ocurrió en su lugar.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: "1. Pulso el botón X\n2. ..."
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Sistema operativo del equipo
+      placeholder: Windows 11 / macOS 15.4 / Ubuntu 24.04
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: Móvil y navegador
+      placeholder: iPhone 15, Safari / Android, Chrome
+  - type: input
+    id: version
+    attributes:
+      label: Versión de MiniDeck y de Python
+      placeholder: MiniDeck 1.0.0, Python 3.12
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log del servidor
+      description: Lo que sale en la consola. **Borra tu token y cualquier dato personal.**
+      render: text

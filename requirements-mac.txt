@@ -1,0 +1,5 @@
+# MiniDeck — dependencias para CONSTRUIR la app de macOS (.app / .dmg)
+#   python3 -m venv buildenv
+#   ./buildenv/bin/pip install -r requirements-mac.txt
+-r requirements.txt
+pyinstaller>=6.3

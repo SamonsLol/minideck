@@ -1,0 +1,40 @@
+# --- secretos y datos personales (NUNCA subir) ---
+server/config/deck.json
+server/config/discord.json
+server/config/auth_token
+server/config/*.tmp
+*.pem
+.env
+
+# --- entornos virtuales ---
+.venv/
+venv/
+buildenv/
+mientorno/
+samons/
+
+# --- builds ---
+build/work/
+dist/
+*.dmg
+*.spec.bak
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- sistema / editores ---
+.DS_Store
+__MACOSX/
+Thumbs.db
+desktop.ini
+*.lnk
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- material de diseño local ---
+recursos/

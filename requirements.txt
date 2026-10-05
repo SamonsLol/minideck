@@ -1,0 +1,22 @@
+# MiniDeck — dependencias del servidor (Windows, macOS y Linux)
+# Instalar con:  pip install -r requirements.txt
+# Los marcadores ";" hacen que cada sistema instale solo lo suyo.
+
+# --- núcleo del servidor ---
+fastapi>=0.110              # API + WebSocket
+uvicorn[standard]>=0.29     # servidor ASGI
+psutil>=5.9                 # plugins sysmon / indicators (CPU, RAM, red, batería)
+segno>=1.6                  # código QR de emparejamiento
+
+# --- acciones de teclado / ratón ---
+keyboard>=0.13.5; sys_platform == "win32"     # atajos y escritura en Windows
+pyautogui>=0.9.54                             # ratón (todas) y atajos (macOS)
+
+# --- Windows: audio y Now Playing ---
+pycaw>=20240210; sys_platform == "win32"      # volumen y mezclador por app
+comtypes>=1.4; sys_platform == "win32"        # requerido por pycaw
+winsdk>=1.0.0b10; sys_platform == "win32" and python_version < "3.13"  # sesión multimedia (SMTC)
+
+# --- macOS ---
+pyobjc>=10; sys_platform == "darwin"          # Cocoa, Quartz, Vision (OCR)
+rumps>=0.4; sys_platform == "darwin"          # app de barra de menú

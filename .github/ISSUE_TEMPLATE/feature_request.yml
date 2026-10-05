@@ -1,0 +1,23 @@
+name: 💡 Idea
+description: Propón una función nueva
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué problema resuelve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: ¿Cómo te imaginas la solución?
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: ¿Podría ser un plugin?
+      description: Las funciones específicas de una app (OBS, Spotify…) encajan mejor como plugin. Ver docs/PLUGINS.md
+      options:
+        - No lo sé
+        - Sí, podría ser un plugin
+        - No, necesita cambios en el núcleo

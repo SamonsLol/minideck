@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check server tests examples
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      # Solo lo necesario para los tests: las dependencias de escritorio
+      # (pyautogui, pyobjc, pycaw…) no hacen falta y no se instalan en CI.
+      - run: pip install fastapi "uvicorn[standard]" psutil segno pytest httpx
+      - run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Comprobar sintaxis JS
+        run: |
+          for f in frontend/*.js server/plugins/*/widget.js examples/plugins/*/widget.js; do
+            node --check "$f"
+          done
+      - name: Validar JSON
+        run: |
+          for f in server/config/*.json server/plugins/*/plugin.json examples/plugins/*/plugin.json frontend/manifest.webmanifest; do
+            python3 -m json.tool "$f" > /dev/null
+          done

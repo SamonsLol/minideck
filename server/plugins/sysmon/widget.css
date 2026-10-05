@@ -1,0 +1,58 @@
+/* Panel del sistema: CPU / RAM / Disco — icono + porcentaje (compacto). */
+.sm-panel {
+  --led: #34d399;
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  overflow: hidden;
+}
+.sm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.sm-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px 2px;
+  border-right: 1px solid var(--border);
+}
+.sm-tile:last-child { border-right: none; }
+.sm-ic { display: inline-flex; }
+.sm-ic img { width: 18px; height: 18px; display: block; }
+.sm-pct { display: flex; align-items: baseline; gap: 1px; }
+.sm-num {
+  font-family: var(--mono);
+  font-size: clamp(20px, 6vw, 26px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.sm-unit { font-size: 12px; color: var(--muted); }
+.sm-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sm-tile.hot .sm-num { color: var(--err); }
+
+/* ---- tema LCD (gris-blanco sobre chasis) ---- */
+[data-theme="lcd"] .sm-panel { background: #c1c1c1; border-color: #9e9d9d; box-shadow: none; }
+[data-theme="lcd"] .sm-tile { border-right-color: #9e9d9d; }
+[data-theme="lcd"] .sm-ic img { filter: brightness(0) invert(0.3); }
+[data-theme="lcd"] .sm-num { color: #2d2d2d; }
+[data-theme="lcd"] .sm-unit,
+[data-theme="lcd"] .sm-label { color: #7a7a76; }
+[data-theme="lcd"] .sm-tile.hot .sm-num { color: #c0392b; }

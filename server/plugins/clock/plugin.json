@@ -1,0 +1,6 @@
+{
+  "name": "Reloj",
+  "version": "1.0.0",
+  "author": "Samons",
+  "description": "Widget de hora, fecha y batería. Solo frontend; la batería viene de 'sysmon'."
+}

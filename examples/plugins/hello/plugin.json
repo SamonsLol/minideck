@@ -1,0 +1,14 @@
+{
+  "name": "Hola mundo",
+  "version": "1.0.0",
+  "author": "Samons",
+  "description": "Plantilla de plugin: una acción, una fuente de estado, un widget y un ajuste.",
+  "homepage": "https://github.com/SamonsLol/minideck",
+  "platforms": [],
+  "requires": [],
+  "minideck": "1.0.0",
+  "api": 1,
+  "settings": {
+    "greeting": "¡Hola!"
+  }
+}

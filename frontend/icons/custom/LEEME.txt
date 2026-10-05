@@ -1,0 +1,1 @@
+Pon aquí tus PNG/SVG propios y úsalos con "icon": "img:custom/nombre.png"

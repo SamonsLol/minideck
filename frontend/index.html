@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>MiniDeck</title>
+
+  <!-- PWA / pantalla completa en iPhone -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MiniDeck">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#0f1216">
+
+  <link rel="stylesheet" href="style.css?v=40">
+  <!-- aplica el tema guardado antes de pintar, para evitar parpadeo -->
+  <script>
+    try { var t = localStorage.getItem("minideck-theme");
+          if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="splash" id="splash">
+    <img class="splash-logo" src="icons/icon-192.png" alt="">
+    <div class="splash-title">MiniDeck</div>
+    <div class="splash-by">by Samons</div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="status-dot" id="statusDot" title="Estado de conexión"></span>
+      <h1 id="deckName">MiniDeck</h1>
+      <span class="version">v1.0</span>
+    </div>
+    <div class="top-right">
+      <div class="system-state" id="systemState"></div>
+      <button class="icon-btn" id="profileBtn" title="Cambiar de página según la app activa">◎</button>
+      <button class="icon-btn" id="themeBtn" title="Cambiar tema">◑</button>
+      <button class="icon-btn" id="fsBtn" title="Pantalla completa">⛶</button>
+      <button class="icon-btn" id="editBtn" title="Editar deck">✎</button>
+    </div>
+  </header>
+
+  <nav class="pages" id="pageTabs"></nav>
+
+  <main class="grid" id="grid"></main>
+
+  <button class="fs-exit" id="fsExit" title="Salir de pantalla completa">✕</button>
+
+  <div class="a2hs" id="a2hs">
+    <span id="a2hsText">Para verla a pantalla completa: <b>Compartir</b> ⬆️ → <b>Añadir a pantalla de inicio</b>, y ábrela desde ese icono.</span>
+    <button id="a2hsInstall" style="display:none">Instalar</button>
+    <button id="a2hsClose" title="Cerrar">✕</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="auth.js?v=40"></script>
+  <script src="app.js?v=40"></script>
+</body>
+</html>

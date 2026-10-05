@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniDeck — Panel de Control</title>
+<style>
+  :root {
+    --bg:#0f1216; --surface:#171c23; --surface2:#1f2630; --border:#2a323e;
+    --text:#e8ecf2; --muted:#8a93a3; --acc:#60a5fa; --ok:#4ade80; --err:#f87171;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); color:var(--text); height:100vh;
+    font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:grid; grid-template-columns:260px 1fr; overflow:hidden;
+  }
+  aside { border-right:1px solid var(--border); padding:18px; display:flex; flex-direction:column; gap:10px; }
+  aside h1 { font-size:15px; }
+  aside h1 small { color:var(--muted); font-weight:400; display:block; font-size:11.5px; margin-top:2px; }
+  #list { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+  .item { text-align:left; background:var(--surface); border:1px solid var(--border);
+    color:var(--text); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13.5px; }
+  .item.sel { border-color:var(--acc); }
+  .item small { color:var(--muted); display:block; font-size:11px; margin-top:1px; }
+  .btn { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:10px 14px; cursor:pointer; font-size:13.5px; }
+  .btn.primary { background:var(--text); color:var(--bg); border:none; font-weight:650; }
+  .btn.danger { color:var(--err); }
+  .btn.mini { padding:4px 9px; font-size:12px; border-radius:8px; }
+
+  main { display:grid; grid-template-rows:auto 1fr; overflow:hidden; }
+  .top { display:flex; gap:10px; align-items:center; padding:12px 18px; border-bottom:1px solid var(--border); }
+  .top input { background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); padding:9px 12px; font-size:14px; }
+  #wid { width:150px; font-family:var(--mono); font-size:12.5px; }
+  #wname { flex:1; }
+  #status { font-size:12.5px; color:var(--muted); min-width:120px; text-align:right; }
+  #status.ok { color:var(--ok); } #status.err { color:var(--err); }
+
+  /* switch de modo */
+  .modes { display:flex; background:var(--surface2); border:1px solid var(--border);
+    border-radius:999px; padding:3px; }
+  .modes button { background:transparent; border:none; color:var(--muted);
+    border-radius:999px; padding:6px 16px; font-size:13px; cursor:pointer; font-weight:600; }
+  .modes button.on { background:var(--text); color:var(--bg); }
+
+  .work { display:grid; grid-template-columns:1fr 380px; overflow:hidden; }
+  .preview { border-left:1px solid var(--border); padding:16px; display:flex; flex-direction:column; gap:10px; overflow:auto; }
+  .preview h2 { font-size:12px; color:var(--muted); font-weight:650; letter-spacing:.4px; }
+  #pv { border:1px solid var(--border); border-radius:18px; background:var(--surface);
+    min-height:150px; padding:12px; --led:#60a5fa; display:flex; flex-direction:column; justify-content:center; }
+  .hint { font-size:12px; color:var(--muted); line-height:1.65; }
+  .hint code { font-family:var(--mono); color:var(--text); font-size:11px; }
+
+  /* ------- modo código ------- */
+  #codeMode { display:grid; grid-template-rows:auto 1fr 1fr 1fr; overflow:hidden; }
+  .ed { display:flex; flex-direction:column; border-bottom:1px solid var(--border); overflow:hidden; }
+  .ed label { font-size:11px; font-weight:650; color:var(--muted); padding:7px 14px 0; letter-spacing:.4px; }
+  .ed textarea { flex:1; resize:none; background:transparent; border:none; outline:none;
+    color:var(--text); font-family:var(--mono); font-size:12.5px; line-height:1.55;
+    padding:8px 14px 12px; white-space:pre; tab-size:2; }
+
+  /* ------- modo simple ------- */
+  #simpleMode { overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:14px; }
+  .adders { display:flex; gap:10px; flex-wrap:wrap; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .card-head { display:flex; align-items:center; gap:8px; }
+  .card-head .kind { font-size:12px; font-weight:700; color:var(--muted); letter-spacing:.4px; flex:1; }
+  .frow { display:grid; grid-template-columns:150px 1fr; align-items:center; gap:10px; }
+  .frow label { font-size:12.5px; color:var(--muted); }
+  .frow input, .frow select { background:var(--bg); border:1px solid var(--border);
+    border-radius:9px; color:var(--text); padding:8px 11px; font-size:13.5px; width:100%; }
+  .empty-simple { color:var(--muted); font-size:13px; text-align:center; padding:26px 0;
+    border:1px dashed var(--border); border-radius:14px; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>MiniDeck<small>Panel de widgets personalizados</small></h1>
+  <button class="btn primary" onclick="nuevo()">＋ Nuevo widget</button>
+  <div id="list"></div>
+  <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+    <div style="font-size:11px; font-weight:650; color:var(--muted); letter-spacing:.4px;">DEPENDENCIAS PYTHON (pip)</div>
+    <div style="display:flex; gap:6px;">
+      <input id="pipPkg" placeholder="requests" spellcheck="false"
+        style="flex:1; min-width:0; background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--text); padding:8px 10px; font-size:12.5px; font-family:var(--mono);">
+      <button class="btn mini" onclick="pipInstall()">Instalar</button>
+    </div>
+    <pre id="pipOut" style="display:none; max-height:120px; overflow:auto; font-family:var(--mono); font-size:10.5px; color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:8px; white-space:pre-wrap;"></pre>
+  </div>
+</aside>
+
+<main>
+  <div class="top">
+    <div class="modes">
+      <button id="mSimple" onclick="setMode('simple')">Simple</button>
+      <button id="mCode" onclick="setMode('code')">Código</button>
+    </div>
+    <input id="wid" placeholder="id_unico" spellcheck="false">
+    <input id="wname" placeholder="Nombre del widget" spellcheck="false">
+    <span id="status"></span>
+    <button class="btn danger" onclick="borrar()">Eliminar</button>
+    <button class="btn primary" onclick="guardar()">Guardar (Ctrl+S)</button>
+  </div>
+
+  <div class="work">
+    <div style="overflow:hidden; display:grid;">
+
+      <div id="simpleMode">
+        <div class="adders">
+          <button class="btn" onclick="addBloque('button')">＋ Botón</button>
+          <button class="btn" onclick="addBloque('live')">＋ Texto en vivo</button>
+        </div>
+        <div id="bloques"></div>
+      </div>
+
+      <div id="codeMode" style="display:none;">
+        <div class="ed" style="flex:0 0 auto; max-height:90px;">
+          <label>LIBRERÍAS EXTERNAS — una URL de CDN por línea (js/css), se cargan antes de tu JS</label>
+          <textarea id="elibs" spellcheck="false" rows="2"
+            placeholder="https://cdn.jsdelivr.net/npm/chart.js"></textarea></div>
+        <div class="ed"><label>HTML — el diseño del widget</label>
+          <textarea id="ehtml" spellcheck="false"></textarea></div>
+        <div class="ed"><label>JS — el funcionamiento (recibe ctx)</label>
+          <textarea id="ejs" spellcheck="false"></textarea></div>
+        <div class="ed"><label>CSS — los estilos</label>
+          <textarea id="ecss" spellcheck="false"></textarea></div>
+      </div>
+
+    </div>
+    <div class="preview">
+      <h2>VISTA PREVIA</h2>
+      <div id="pv"></div>
+      <div class="hint" id="hintSimple">
+        <b>Modo Simple:</b> arma tu widget con bloques, sin código.<br>
+        <b>Botón</b>: elige qué hace (abrir una app, un atajo, multimedia,
+        Discord…) y llena los campos.<br>
+        <b>Texto en vivo</b>: muestra datos del PC actualizándose solos
+        (volumen, CPU, canción…).<br><br>
+        Al guardar, el widget aparece al instante en el editor del deck del
+        iPhone como <b>✦ Tu widget</b>.
+      </div>
+      <div class="hint" id="hintCode" style="display:none;">
+        En el JS tienes <code>ctx</code>:<br>
+        <code>ctx.el</code> raíz · <code>ctx.w</code> config del botón<br>
+        <code>ctx.run("hotkey", {keys:"ctrl+c"})</code> ejecuta acciones<br>
+        <code>ctx.onState("volume", v => …)</code> estado en vivo
+        (volume, muted, mixer, nowplaying, discord, sysmon…)<br>
+        <code>ctx.toast("hola")</code> · <code>ctx.renderIcon(el, "lucide:play", "#fff")</code><br><br><b>Librerías externas</b>: pega URLs de CDN (una por línea) y estarán cargadas antes de tu JS — ej. Chart.js para gráficas, o dayjs para fechas. En Python, instala paquetes para tus plugins con el instalador pip de la izquierda.
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="auth.js?v=40"></script>
+<script>
+const $ = id => document.getElementById(id);
+let widgets = {};
+let mode = 'simple';
+let bloques = [];           // definición del modo simple
+let cssTag = document.createElement('style');
+document.head.appendChild(cssTag);
+
+/* ---------- catálogo de acciones en lenguaje normal ---------- */
+const ACCIONES = [
+  { id:'launch',   n:'Abrir aplicación o archivo',
+    campos:[{k:'path', n:'Ruta', ph:'notepad.exe o C:/juegos/juego.exe'}] },
+  { id:'website',  n:'Abrir página web',
+    campos:[{k:'url', n:'Dirección', ph:'https://youtube.com'}] },
+  { id:'hotkey',   n:'Atajo de teclado',
+    campos:[{k:'keys', n:'Teclas', ph:'ctrl+shift+m'}] },
+  { id:'type_text',n:'Escribir texto',
+    campos:[{k:'text', n:'Texto', ph:'Hola!'}] },
+  { id:'media',    n:'Control multimedia',
+    campos:[{k:'key', n:'Control', tipo:'select',
+      ops:[['play_pause','Play / Pausa'],['next','Siguiente'],['previous','Anterior']]}] },
+  { id:'volume_mute', n:'Silenciar / activar sonido del PC', campos:[] },
+  { id:'lock',     n:'Bloquear el PC', campos:[] },
+  { id:'power',    n:'Suspender el PC', campos:[], fijo:{mode:'sleep'} },
+  { id:'command',  n:'Comando de Windows (avanzado)',
+    campos:[{k:'cmd', n:'Comando', ph:'shutdown /s /t 60'}] },
+  { id:'discord_webhook', n:'Mensaje a Discord',
+    campos:[{k:'url', n:'Webhook del canal', ph:'https://discord.com/api/webhooks/…'},
+            {k:'content', n:'Mensaje', ph:'Ya voy 🎮'}] },
+];
+
+/* ---------- fuentes de datos en vivo ---------- */
+const FUENTES = [
+  ['volume', 'Volumen del PC (%)'],
+  ['cpu',    'Uso de CPU (%)'],
+  ['ram',    'Uso de RAM (%)'],
+  ['song',   'Canción sonando'],
+  ['artist', 'Artista de la canción'],
+];
+
+/* ================= MODO SIMPLE ================= */
+function addBloque(kind) {
+  if (kind === 'button') {
+    bloques.push({ kind:'button', label:'Mi botón', emoji:'⭐',
+                   action:'launch', params:{ path:'' } });
+  } else {
+    bloques.push({ kind:'live', label:'Volumen', source:'volume' });
+  }
+  pintarBloques();
+}
+
+function pintarBloques() {
+  const box = $('bloques');
+  box.innerHTML = '';
+  if (!bloques.length) {
+    box.innerHTML = '<div class="empty-simple">Agrega bloques con los botones de arriba para armar tu widget</div>';
+    previewSimple();
+    return;
+  }
+  bloques.forEach((b, i) => box.appendChild(cardBloque(b, i)));
+  previewSimple();
+}
+
+function frow(labelTxt, inputEl) {
+  const row = document.createElement('div');
+  row.className = 'frow';
+  const l = document.createElement('label');
+  l.textContent = labelTxt;
+  row.append(l, inputEl);
+  return row;
+}
+function inp(val, ph, oninput) {
+  const i = document.createElement('input');
+  i.value = val ?? ''; i.placeholder = ph ?? ''; i.spellcheck = false;
+  i.oninput = () => { oninput(i.value); previewSimple(); };
+  return i;
+}
+function sel(ops, val, onchange) {
+  const s = document.createElement('select');
+  for (const [v, n] of ops) {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = n;
+    s.appendChild(o);
+  }
+  s.value = val;
+  s.onchange = () => { onchange(s.value); };
+  return s;
+}
+
+function cardBloque(b, i) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  head.innerHTML = `<span class="kind">${b.kind === 'button' ? 'BOTÓN' : 'TEXTO EN VIVO'} · #${i + 1}</span>`;
+  const up = document.createElement('button'); up.className = 'btn mini'; up.textContent = '↑';
+  up.onclick = () => { if (i > 0) { [bloques[i-1], bloques[i]] = [bloques[i], bloques[i-1]]; pintarBloques(); } };
+  const down = document.createElement('button'); down.className = 'btn mini'; down.textContent = '↓';
+  down.onclick = () => { if (i < bloques.length - 1) { [bloques[i+1], bloques[i]] = [bloques[i], bloques[i+1]]; pintarBloques(); } };
+  const del = document.createElement('button'); del.className = 'btn mini danger'; del.textContent = '✕';
+  del.onclick = () => { bloques.splice(i, 1); pintarBloques(); };
+  head.append(up, down, del);
+  card.appendChild(head);
+
+  if (b.kind === 'button') {
+    card.appendChild(frow('Texto del botón', inp(b.label, 'Mi botón', v => b.label = v)));
+    card.appendChild(frow('Emoji / icono', inp(b.emoji, '⭐ o lucide:play', v => b.emoji = v)));
+    card.appendChild(frow('Qué hace', sel(ACCIONES.map(a => [a.id, a.n]), b.action, v => {
+      b.action = v; b.params = {}; pintarBloques();
+    })));
+    const acc = ACCIONES.find(a => a.id === b.action);
+    for (const c of (acc?.campos ?? [])) {
+      if (c.tipo === 'select') {
+        card.appendChild(frow(c.n, sel(c.ops, b.params[c.k] ?? c.ops[0][0],
+          v => { b.params[c.k] = v; previewSimple(); })));
+        if (b.params[c.k] === undefined) b.params[c.k] = c.ops[0][0];
+      } else {
+        card.appendChild(frow(c.n, inp(b.params[c.k], c.ph, v => b.params[c.k] = v)));
+      }
+    }
+  } else {
+    card.appendChild(frow('Etiqueta', inp(b.label, 'Volumen', v => b.label = v)));
+    card.appendChild(frow('Dato a mostrar', sel(FUENTES, b.source, v => { b.source = v; previewSimple(); })));
+  }
+  return card;
+}
+
+/* ---------- generador: bloques → html/js/css ---------- */
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function genHTML() {
+  const botones = bloques.map((b, i) => [b, i]).filter(([b]) => b.kind === 'button')
+    .map(([b, i]) => `  <button class="sw-b" data-i="${i}">${esc(b.emoji)} ${esc(b.label)}</button>`)
+    .join('\n');
+  const vivos = bloques.map((b, i) => [b, i]).filter(([b]) => b.kind === 'live')
+    .map(([b, i]) => `<div class="sw-t"><span>${esc(b.label)}</span><b data-i="${i}">–</b></div>`)
+    .join('\n');
+  let out = '';
+  if (botones) out += `<div class="sw-grid">\n${botones}\n</div>`;
+  if (vivos) out += (out ? '\n' : '') + vivos;
+  return out;
+}
+function genJS() {
+  const acciones = ACCIONES.reduce((m, a) => (m[a.id] = a.fijo ?? null, m), {});
+  return `// Generado por el modo Simple del Panel de MiniDeck
+const els = ${JSON.stringify(bloques, null, 2)};
+const FIJOS = ${JSON.stringify(Object.fromEntries(ACCIONES.filter(a => a.fijo).map(a => [a.id, a.fijo])))};
+ctx.el.querySelectorAll(".sw-b").forEach(btn => {
+  const e = els[btn.dataset.i];
+  btn.onclick = () => ctx.run(e.action, { ...(FIJOS[e.action] ?? {}), ...(e.params ?? {}) });
+});
+function vivo(src, fn) {
+  if (src === "volume") ctx.onState("volume", v => fn(v + "%"));
+  if (src === "cpu")    ctx.onState("sysmon", d => fn(d.cpu + "%"));
+  if (src === "ram")    ctx.onState("sysmon", d => fn(d.ram + "%"));
+  if (src === "song")   ctx.onState("nowplaying", d => fn(d.active ? d.title : "–"));
+  if (src === "artist") ctx.onState("nowplaying", d => fn(d.active ? d.artist : "–"));
+}
+els.forEach((e, i) => {
+  if (e.kind !== "live") return;
+  const out = ctx.el.querySelector('.sw-t b[data-i="' + i + '"]');
+  if (out) vivo(e.source, v => { out.textContent = v; });
+});`;
+}
+function genCSS() {
+  return `.sw-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.sw-b { flex:1; min-width:40%; padding:12px 6px; border-radius:12px; font-size:13.5px;
+  background: var(--surface-2, #1f2630); border:1px solid var(--border, #2a323e);
+  color:inherit; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sw-b:active { transform: scale(.94); filter: brightness(1.25); }
+.sw-t { display:flex; justify-content:space-between; align-items:baseline; margin-top:9px;
+  font-size:12.5px; color: var(--muted, #8a93a3); }
+.sw-t b { font-family: ui-monospace, monospace; font-size:13px;
+  color: var(--text, #e8ecf2); max-width:60%; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; }`;
+}
+
+/* ================= MODOS ================= */
+function setMode(m) {
+  if (m === 'code' && mode === 'simple') {
+    // volcar el código generado a los editores
+    $('ehtml').value = genHTML();
+    $('ejs').value = genJS();
+    $('ecss').value = genCSS();
+  }
+  mode = m;
+  $('mSimple').classList.toggle('on', m === 'simple');
+  $('mCode').classList.toggle('on', m === 'code');
+  $('simpleMode').style.display = m === 'simple' ? '' : 'none';
+  $('codeMode').style.display = m === 'code' ? 'grid' : 'none';
+  $('hintSimple').style.display = m === 'simple' ? '' : 'none';
+  $('hintCode').style.display = m === 'code' ? '' : 'none';
+  if (m === 'simple') previewSimple(); else previewCode();
+}
+
+function previewSimple() { cssTag.textContent = genCSS(); $('pv').innerHTML = genHTML() || '<div style="color:#8a93a3;font-size:12px;text-align:center;">(vacío)</div>'; }
+function previewCode()   { cssTag.textContent = $('ecss').value; $('pv').innerHTML = $('ehtml').value; }
+for (const id of ['ehtml', 'ecss']) $(id).addEventListener('input', previewCode);
+
+/* ================= CRUD ================= */
+async function cargar() {
+  const cfg = await (await MiniDeckAuth.api('/api/config')).json();
+  widgets = cfg.customWidgets ?? {};
+  pintarLista();
+}
+function pintarLista(selId) {
+  const box = $('list');
+  box.innerHTML = '';
+  for (const [id, d] of Object.entries(widgets)) {
+    const b = document.createElement('button');
+    b.className = 'item' + (id === selId ? ' sel' : '');
+    b.innerHTML = `${esc(d.name || id)}<small>${d.simple ? 'simple' : 'código'} · custom:${id}</small>`;
+    b.onclick = () => abrir(id);
+    box.appendChild(b);
+  }
+}
+function abrir(id) {
+  const d = widgets[id];
+  $('wid').value = id;
+  $('wname').value = d.name || '';
+  $('elibs').value = (d.libs || []).join('\n');
+  $('ehtml').value = d.html || '';
+  $('ejs').value = d.js || '';
+  $('ecss').value = d.css || '';
+  bloques = d.simple ? JSON.parse(JSON.stringify(d.simple)) : [];
+  pintarLista(id);
+  setMode(d.simple ? 'simple' : 'code');
+  if (d.simple) pintarBloques();
+}
+function nuevo() {
+  $('wid').value = ''; $('wname').value = ''; $('elibs').value = '';
+  $('ehtml').value = ''; $('ejs').value = ''; $('ecss').value = '';
+  bloques = [];
+  pintarLista();
+  setMode('simple');
+  pintarBloques();
+  $('wid').focus();
+}
+async function guardar() {
+  const id = $('wid').value.trim();
+  const st = $('status');
+  if (!id) { st.textContent = 'Falta el id'; st.className = 'err'; return; }
+  let body;
+  if (mode === 'simple') {
+    body = { id, name: $('wname').value.trim(),
+             html: genHTML(), js: genJS(), css: genCSS(), simple: bloques };
+  } else {
+    // guardar en modo código desliga el modo simple (el código manda)
+    body = { id, name: $('wname').value.trim(),
+             html: $('ehtml').value, js: $('ejs').value, css: $('ecss').value,
+             libs: $('elibs').value.split(/\n+/).map(s => s.trim()).filter(Boolean) };
+  }
+  try {
+    const r = await MiniDeckAuth.api('/api/custom_widget', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body) });
+    const res = await r.json();
+    if (!res.ok) throw new Error(res.error || 'error');
+    st.textContent = 'Guardado ✓ (ya está en el deck)';
+    st.className = 'ok';
+    widgets[id] = body;
+    pintarLista(id);
+  } catch (e) { st.textContent = 'Error: ' + e.message; st.className = 'err'; }
+}
+async function borrar() {
+  const id = $('wid').value.trim();
+  if (!id || !widgets[id]) return;
+  if (!confirm(`¿Eliminar "${id}"?`)) return;
+  await MiniDeckAuth.api('/api/custom_widget/' + encodeURIComponent(id), { method: 'DELETE' });
+  delete widgets[id];
+  nuevo();
+}
+async function pipInstall() {
+  const pkg = $('pipPkg').value.trim();
+  if (!pkg) return;
+  const out = $('pipOut');
+  out.style.display = '';
+  out.textContent = 'Instalando ' + pkg + '…';
+  try {
+    const r = await MiniDeckAuth.api('/api/pip', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ package: pkg }) });
+    const res = await r.json();
+    out.textContent = res.output + (res.ok
+      ? '\n\n✓ Instalado. Reinicia el servidor para que los plugins lo usen.'
+      : '\n\n✗ Falló la instalación.');
+  } catch (e) { out.textContent = 'Error: ' + e.message; }
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); guardar(); }
+});
+
+MiniDeckAuth.ensure().then(t => t ? cargar() : MiniDeckAuth.showPairing());
+nuevo();
+</script>
+</body>
+</html>

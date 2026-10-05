@@ -1,0 +1,63 @@
+/* Indicadores en vivo: clima, red, git, docker. */
+.ind-widget {
+  --led: #22d3ee;
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  overflow: hidden;
+}
+.ind-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.ind-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 2px;
+  border-right: 1px solid var(--border);
+}
+.ind-tile:last-child { border-right: none; }
+.ind-ic img { width: 17px; height: 17px; display: block; }
+.ind-big {
+  font-family: var(--mono);
+  font-size: clamp(15px, 4.5vw, 19px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.ind-u { font-size: 9px; font-weight: 500; color: var(--muted); }
+.ind-sub {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.ind-empty { color: var(--muted); font-size: 12px; width: 100%; text-align: center; }
+
+/* ---- tema LCD ---- */
+[data-theme="lcd"] .ind-widget { background: #c1c1c1; border-color: #9e9d9d; box-shadow: none; }
+[data-theme="lcd"] .ind-tile { border-right-color: #9e9d9d; }
+[data-theme="lcd"] .ind-ic img { filter: brightness(0) invert(0.3); }
+[data-theme="lcd"] .ind-big { color: #2d2d2d; }
+[data-theme="lcd"] .ind-u,
+[data-theme="lcd"] .ind-sub { color: #7a7a76; }

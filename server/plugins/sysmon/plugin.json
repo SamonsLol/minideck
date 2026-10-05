@@ -1,0 +1,7 @@
+{
+  "name": "Monitor del sistema",
+  "version": "1.0.0",
+  "author": "Samons",
+  "description": "CPU, RAM, disco y batería en vivo (fuente de estado 'sysmon').",
+  "requires": ["psutil"]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Indicadores",
+  "version": "1.0.0",
+  "author": "Samons",
+  "description": "Clima, velocidad de red, rama/cambios de un repo Git y contenedores Docker.",
+  "requires": ["psutil"],
+  "settings": {
+    "git_repo": "",
+    "weather_location": "",
+    "weather_enabled": true
+  }
+}
