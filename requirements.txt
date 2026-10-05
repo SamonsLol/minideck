@@ -14,7 +14,7 @@ pyautogui>=0.9.54                             # ratón (todas) y atajos (macOS)
 
 # --- Windows: audio y Now Playing ---
 pycaw>=20240210; sys_platform == "win32"      # volumen y mezclador por app
-comtypes>=1.4; sys_platform == "win32"        # requerido por pycaw
+comtypes>=1.4.17; sys_platform == "win32"        # requerido por pycaw
 winsdk>=1.0.0b10; sys_platform == "win32" and python_version < "3.13"  # sesión multimedia (SMTC)
 
 # --- macOS ---
