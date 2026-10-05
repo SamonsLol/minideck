@@ -6,7 +6,7 @@
 fastapi>=0.110              # API + WebSocket
 uvicorn[standard]>=0.29     # servidor ASGI
 psutil>=5.9                 # plugins sysmon / indicators (CPU, RAM, red, batería)
-segno>=1.6                  # código QR de emparejamiento
+segno>=1.6.6                  # código QR de emparejamiento
 
 # --- acciones de teclado / ratón ---
 keyboard>=0.13.5; sys_platform == "win32"     # atajos y escritura en Windows
