@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """
 MiniDeck — Servidor principal
 FastAPI + WebSocket. Sirve el frontend y ejecuta acciones en el equipo.
@@ -34,7 +36,7 @@ from actions import (
     plugin_file,
 )
 from paths import CERT_FILE, CONFIG_PATH, FRONTEND_DIR, KEY_FILE, ensure_dirs
-from version import PLUGIN_API, __version__
+from version import LICENSE, PLUGIN_API, SOURCE_URL, __version__
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 log = logging.getLogger("minideck")
@@ -341,6 +343,7 @@ async def api_pair():
 @app.get("/api/info")
 async def api_info():
     return JSONResponse({"name": "MiniDeck", "version": __version__,
+                         "license": LICENSE, "source": SOURCE_URL,
                          "pluginApi": PLUGIN_API, "platform": sys.platform})
 
 
@@ -517,6 +520,8 @@ padding:12px;border-radius:16px}} .u{{font-family:ui-monospace,monospace;font-si
 <div class="t">Código de emparejamiento: <code>{html.escape(auth.TOKEN)}</code></div>
 <div class="t">Cámara del móvil → abrir en el navegador → Compartir → Añadir a pantalla de inicio.
 No compartas este QR: da control total sobre este equipo.</div>
+<div class="t">MiniDeck {__version__} · software libre bajo {LICENSE}, sin garantía ·
+<a style="color:inherit" href="{html.escape(SOURCE_URL)}">código fuente</a></div>
 </body></html>"""
     return Response(content=page, media_type="text/html",
                     headers={"Cache-Control": "no-store"})

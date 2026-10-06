@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Fuente de estado: la app en primer plano del Mac.
 
 El cliente usa esto para el "perfil por app": cambia de página según la

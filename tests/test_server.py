@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 import json
 
 import pytest
@@ -95,6 +97,12 @@ def test_websocket_flow(client):
         assert msg["ok"] is True
         assert msg["message"] == "¡Hola! Samons"
         assert msg["state"]["hello"]["count"] >= 1
+
+
+def test_info_exposes_license_and_source(client):
+    info = client.get("/api/info", headers=TOKEN).json()
+    assert info["license"] == "AGPL-3.0-or-later"
+    assert info["source"].startswith("https://")
 
 
 def test_manifest_start_url(client):

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Lanzar apps/archivos y ejecutar comandos en macOS.
 
 Sustituye a launch.py (que usa APIs de Windows). 'website' se hereda de

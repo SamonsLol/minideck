@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Acciones extra de macOS: portapapeles, Mission Control / escritorios,
 vaciar papelera y ejecutar Atajos de macOS (Shortcuts.app).
 

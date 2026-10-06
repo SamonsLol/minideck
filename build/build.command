@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 # MiniDeck — construir la app de barra de menú (.app). Doble clic o:
 #   bash build/build.command
 set -e

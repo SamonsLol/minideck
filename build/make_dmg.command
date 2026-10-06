@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 # MiniDeck — crear el instalador .dmg (arrastrar a Aplicaciones).
 # Requiere dist/MiniDeck.app (ejecuta antes build/build.command). Uso:
 #   bash build/make_dmg.command

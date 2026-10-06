@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Atajos de teclado y escritura de texto en macOS.
 
 En Windows esto lo hace keys.py (módulo `keyboard`, no instalable en Mac).

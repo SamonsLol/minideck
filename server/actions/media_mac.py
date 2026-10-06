@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Now Playing para macOS (vía AppleScript).
 
 En Windows se usa la sesión multimedia global (SMTC, ver media_session.py).

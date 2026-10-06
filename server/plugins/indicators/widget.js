@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* Widget "indicators": clima, red, Git y Docker en vivo.
    Muestra solo los que estén disponibles. */
 (() => {

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* Service worker mínimo: cachea los estáticos de la interfaz (red primero,
    caché como respaldo sin conexión). Nunca cachea /api ni nada con token.
    Solo se registra bajo HTTPS o localhost (limitación del navegador). */

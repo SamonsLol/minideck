@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Control de volumen del sistema en macOS (vía `osascript`).
 
 Equivalente a volume.py/mixer.py de Windows (que usan pycaw y no cargan en

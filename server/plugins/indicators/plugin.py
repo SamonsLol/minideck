@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Indicadores en vivo: clima, red, estado de Git y de Docker.
 
 Una sola fuente de estado ("indicators_get") que el vigilante sondea cada

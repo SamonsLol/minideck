@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """MiniDeck — app de barra de menú para macOS.
 
 Arranca el servidor (uvicorn) en un hilo y pone un icono en la barra de menú

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Configura un entorno aislado ANTES de importar el servidor: config,
 token y plugins de usuario van a carpetas temporales."""
 import json

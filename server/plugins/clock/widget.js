@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* Widget "clock": hora grande + fecha + batería.
    La hora/fecha se actualizan en el propio móvil; la batería viene del
    estado del servidor (plugin sysmon). Se registra como tipo "clock". */

@@ -1,6 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 # MiniDeck para Windows: arranca el servidor sin consola visible y pone un
 # icono en la bandeja del sistema (clic derecho -> Mostrar QR / Salir).
-# Se lanza con "Mini Desk.bat" (doble clic) o:
+# Se lanza con "MiniDeck.bat" (doble clic) o:
 #   powershell -ExecutionPolicy Bypass -File server\run.ps1
 
 $ErrorActionPreference = "Stop"

@@ -1,13 +1,13 @@
 # MiniDeck
 
 [![CI](https://github.com/SamonsLol/minideck/actions/workflows/ci.yml/badge.svg)](https://github.com/SamonsLol/minideck/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
 Convierte tu móvil en un **Stream Deck** para tu PC o Mac. Sin app que instalar en el teléfono: es una PWA que abres en el navegador. El servidor es Python (FastAPI + WebSocket) y el frontend es HTML/CSS/JS puro, sin build.
 
-> **English:** MiniDeck turns your phone into a Stream Deck–style controller for your Windows/macOS/Linux computer. Python server + zero-build PWA, plugin system, MIT licensed. Docs are in Spanish; issues and PRs in English are welcome.
+> **English:** MiniDeck turns your phone into a Stream Deck–style controller for your Windows/macOS/Linux computer. Python server + zero-build PWA, plugin system, licensed under AGPL-3.0-or-later. Docs are in Spanish; issues and PRs in English are welcome.
 
 ## Qué hace
 
@@ -173,4 +173,8 @@ ruff check server tests
 
 ## Licencia
 
-[MIT](LICENSE) © Samons
+Copyright © 2026 Samons
+
+MiniDeck es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la **GNU Affero General Public License** publicada por la Free Software Foundation, ya sea la versión 3 o (a tu elección) cualquier versión posterior (`AGPL-3.0-or-later`). Se distribuye SIN NINGUNA GARANTÍA. Texto completo en [LICENSE](LICENSE).
+
+En resumen: puedes usarlo, modificarlo y compartirlo libremente, pero si distribuyes una versión modificada **o la ofreces a otras personas a través de la red**, debes publicar su código fuente bajo la misma licencia.

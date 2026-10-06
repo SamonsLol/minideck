@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Integración profunda con Discord vía su API local (IPC/RPC).
 Mute real con estado sincronizado + quién está hablando en tu canal de voz.
 

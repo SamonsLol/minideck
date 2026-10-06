@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* ============================================================
    MiniDeck — emparejamiento / token de acceso
    El servidor exige un token en /api y /ws. Se obtiene así:

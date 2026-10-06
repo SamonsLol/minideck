@@ -1,4 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 # PyInstaller spec para MiniDeck (.app de barra de menú).
 # Construir desde la RAÍZ del proyecto:
 #   ./buildenv/bin/pyinstaller build/minideck.spec --noconfirm

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Control de volumen del sistema. Requiere: pip install pycaw comtypes
 
 Compatible con pycaw moderno (GetSpeakers devuelve AudioDevice con

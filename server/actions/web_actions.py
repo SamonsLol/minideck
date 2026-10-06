@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Acción HTTP genérica: dispara webhooks / APIs (n8n, Home Assistant,
 OBS con puente HTTP, IFTTT, etc.). Multiplataforma."""
 import json

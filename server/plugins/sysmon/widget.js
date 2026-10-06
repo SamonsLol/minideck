@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* Widget del plugin sysmon: panel compacto con CPU, RAM y Disco.
    Muestra icono + porcentaje (sin barra). Se registra como tipo "sysmon". */
 (() => {

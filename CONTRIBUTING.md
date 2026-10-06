@@ -36,7 +36,8 @@ El CI ejecuta ambos en Windows, macOS y Linux.
 - **Frontend sin build**: HTML/CSS/JS puro, sin dependencias de npm. Usa `textContent` para datos externos.
 - **Seguridad**: nada de `shell=True` con texto del usuario; cualquier ruta nueva de `/api` pasa por el middleware de autenticación. Si añades algo sensible, añade un test.
 - **Commits** pequeños y descriptivos. Un PR = un cambio.
-- Al contribuir aceptas que tu código se publique bajo la [licencia MIT](LICENSE).
+- Al contribuir aceptas que tu código se publique bajo la licencia [AGPL-3.0-or-later](LICENSE).
+- Los archivos nuevos de código deben empezar con la cabecera `SPDX-License-Identifier: AGPL-3.0-or-later`.
 
 ## Código de conducta
 

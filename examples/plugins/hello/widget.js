@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* Widget del plugin «hello»: muestra el contador y saluda al tocarlo. */
 (() => {
   const { registerWidget, run } = window.MiniDeck;

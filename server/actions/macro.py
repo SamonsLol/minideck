@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Macro: ejecuta una secuencia de acciones con pausas opcionales."""
 import time
 

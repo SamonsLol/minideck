@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 # MiniDeck — genera un certificado HTTPS de confianza (con mkcert) para poder
 # instalar la PWA sin barras en Android (Chrome/Brave exigen HTTPS de confianza).
 #   bash build/make_cert.command

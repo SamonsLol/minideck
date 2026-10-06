@@ -169,8 +169,18 @@ Un plugin es código Python que corre **con tus permisos**, igual que cualquier 
 - No guardes secretos en el repo del plugin: léelos de los ajustes del usuario.
 - Declara todas tus dependencias en `requires`.
 
+## Licencia de los plugins
+
+MiniDeck se publica bajo **AGPL-3.0-or-later**. Un plugin con `plugin.py` se ejecuta dentro del mismo proceso que MiniDeck y usa su API interna (`from actions import action`), así que lo más seguro es tratarlo como obra derivada:
+
+- Publica tus plugins bajo **AGPL-3.0-or-later** (o GPL-3.0-or-later, que es compatible).
+- Si ofreces a otras personas un MiniDeck **modificado** con tu plugin a través de la red, debes darles acceso al código fuente (AGPL §13).
+- Un plugin solo de frontend (`widget.js`/`widget.css`) que únicamente usa `window.MiniDeck` es un caso menos claro. Si tienes dudas, usa también AGPL.
+
+Esto no es asesoramiento legal.
+
 ## Publicar tu plugin
 
-1. Crea un repo `minideck-<id>` con la carpeta del plugin y un README con capturas.
+1. Crea un repo `minideck-<id>` con la carpeta del plugin, un `LICENSE` (AGPL-3.0-or-later) y un README con capturas.
 2. Añade el topic `minideck-plugin` en GitHub para que la comunidad lo encuentre.
 3. Abre un PR añadiéndolo a [`docs/PLUGIN_INDEX.md`](PLUGIN_INDEX.md).

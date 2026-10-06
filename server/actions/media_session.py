@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Now Playing: lee y controla lo que suena en el PC (YT Music en el
 navegador, Spotify, etc.) vía SMTC de Windows. Requiere: pip install winsdk
 

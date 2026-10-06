@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Acciones de ratón: clic en coordenadas de pantalla.
 Requiere: pip install pyautogui
 

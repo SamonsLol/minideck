@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Cambiar el dispositivo de salida/entrada de audio en macOS.
 
 Usa SwitchAudioSource (brew install switchaudio-osx). Sin él, avisa cómo

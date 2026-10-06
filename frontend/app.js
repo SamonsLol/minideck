@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
 /* ============================================================
    MiniDeck — cliente
    Conecta por WebSocket, renderiza el deck desde la config

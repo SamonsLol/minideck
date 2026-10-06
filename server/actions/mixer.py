@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Mezclador de volumen por aplicación (como el de Windows).
 Usa las sesiones de audio de pycaw: cada app que reproduce sonido
 aparece con su propio volumen y mute, agrupada por ejecutable.

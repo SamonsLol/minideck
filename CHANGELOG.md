@@ -2,6 +2,12 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Cambiado
+- **Licencia: de MIT a AGPL-3.0-or-later.** Cabeceras SPDX en todos los archivos de código.
+- Enlace «Acerca de» (licencia + código fuente) en la interfaz, en `/qr` y en `/api/info` (AGPL §13).
+
 ## [1.0.0] - 2026-10-05
 
 Primera versión pública.

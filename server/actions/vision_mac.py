@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """OCR de pantalla y color del píxel bajo el cursor (Vision + Quartz nativos).
 
 - ocr_capture: seleccionas una zona y el texto detectado va al portapapeles.

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Plugin de ejemplo «hello»: cópialo como punto de partida.
 
 Instálalo copiando esta carpeta a la carpeta de plugins del usuario

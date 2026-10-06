@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Samons
 """Acciones del sistema (multiplataforma): bloquear, apagar/suspender,
 cerrar procesos, captura de pantalla y mostrar escritorio.
 
