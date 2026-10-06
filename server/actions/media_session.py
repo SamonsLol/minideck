@@ -155,7 +155,7 @@ def now_playing_get(params: dict):
     return {"state": _run(_snapshot())}
 
 
-@action("now_playing")
+@action("now_playing", schema={"cmd": {"type": "str", "choices": ["play_pause", "next", "previous", "seek"]}, "position": {"type": "float", "min": 0}})
 def now_playing(params: dict):
     """Controla la sesión multimedia activa.
     params: {"cmd": "play_pause" | "next" | "previous" | "seek", "position": 90}

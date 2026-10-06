@@ -8,7 +8,7 @@ import urllib.request
 from . import action
 
 
-@action("http_request")
+@action("http_request", schema={"url": {"type": "str", "required": True}, "method": {"type": "str", "choices": ["GET", "POST", "PUT", "PATCH", "DELETE", "get", "post", "put", "patch", "delete"]}, "headers": {"type": "dict"}}, timeout=15)
 def http_request(params: dict):
     """Hace una petición HTTP.
     params: {"url": "...", "method": "POST", "body": {...} | "texto",

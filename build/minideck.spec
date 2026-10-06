@@ -18,7 +18,7 @@ sys.path.insert(0, SERVER)   # para que collect_submodules("actions") lo encuent
 datas = [
     (os.path.join(ROOT, "frontend"), "frontend"),
     (os.path.join(SERVER, "plugins"), "plugins"),
-    (os.path.join(SERVER, "config", "deck.default.json"), "config"),
+    (os.path.join(SERVER, "config", "deck.default.macos.json"), "config"),
 ]
 
 # Los imports pyobjc/pyautogui son perezosos y las acciones/plugins se cargan
@@ -26,6 +26,8 @@ datas = [
 hiddenimports = (
     collect_submodules("actions")
     + collect_submodules("uvicorn")
+    # los plugins se cargan como datos: PyInstaller no ve sus imports (OBS → websockets)
+    + collect_submodules("websockets")
     + [
         "main", "auth", "paths", "version",
         "objc", "Foundation", "AppKit", "Quartz", "Vision",

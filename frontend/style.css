@@ -1116,3 +1116,66 @@ a.icon-btn.about-link {
   display: inline-flex; align-items: center; justify-content: center;
   text-decoration: none;
 }
+
+/* ------------------------------------------------ aviso "sin conexión" */
+.offline-banner {
+  position: fixed;
+  left: 50%;
+  top: calc(10px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 90;
+  max-width: calc(100vw - 32px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--err) 18%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--err) 55%, transparent);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+.offline-banner[hidden] { display: none; }
+
+/* ------------------------------------------------ editor: ayuda de la acción */
+.f-hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: -4px 0 4px;
+}
+.f-hint:empty { display: none; }
+
+/* ------------------------------------------------ pulsación larga / estado */
+.key.has-long::before {
+  content: "";
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--led);
+  opacity: 0.7;
+}
+.key { -webkit-touch-callout: none; user-select: none; }
+.key.is-on { border-color: color-mix(in srgb, var(--led) 65%, var(--border)); }
+
+.lang-btn { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+
+/* ------------------------------------------------ barra superior en móviles
+   Con 6 botones no cabe todo en ~390 px: se ocultan la versión y el texto
+   del volumen (ya visible en el slider) y se compactan los botones. */
+.topbar { gap: 8px; }
+.brand { min-width: 0; }
+.brand h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-right { flex-shrink: 0; }
+@media (max-width: 460px) {
+  .topbar { padding: 12px 12px 8px; }
+  .version, .system-state { display: none; }
+  .top-right { gap: 6px; }
+  .icon-btn { width: 32px; height: 32px; font-size: 14px; }
+}
+@media (max-width: 350px) {
+  #profileBtn { display: none; }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "OBS Studio",
+  "version": "1.0.0",
+  "author": "Samons",
+  "description": "Controla OBS Studio (escenas, grabación, directo, micro, repetición) vía obs-websocket v5.",
+  "requires": [],
+  "settings": {
+    "host": "localhost",
+    "port": 4455,
+    "password": ""
+  }
+}

@@ -7,5 +7,7 @@ Plugins creados por la comunidad. Para añadir el tuyo, abre un PR con una fila 
 | Plugin | Descripción | Plataformas | Autor |
 |---|---|---|---|
 | [clock](../server/plugins/clock/) *(incluido)* | Hora, fecha y batería | todas | Samons |
+| [homeassistant](../server/plugins/homeassistant/) *(incluido)* | Home Assistant: servicios, escenas y estado de entidades | todas | Samons |
 | [indicators](../server/plugins/indicators/) *(incluido)* | Clima, red, Git y Docker | todas | Samons |
+| [obs](../server/plugins/obs/) *(incluido)* | OBS Studio: escenas, grabación, directo, micro y repetición | todas | Samons |
 | [sysmon](../server/plugins/sysmon/) *(incluido)* | CPU, RAM, disco y batería | todas | Samons |

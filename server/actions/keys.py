@@ -11,7 +11,7 @@ import keyboard
 from . import action
 
 
-@action("hotkey")
+@action("hotkey", schema={"keys": {"type": "str", "required": True}})
 def hotkey(params: dict):
     """Envía una combinación de teclas.
     params: {"keys": "ctrl+shift+m"}
@@ -24,7 +24,7 @@ def hotkey(params: dict):
     return {"message": f"Atajo: {keys}"}
 
 
-@action("type_text")
+@action("type_text", schema={"text": {"type": "str", "required": True}})
 def type_text(params: dict):
     """Escribe texto como si lo teclearas.
     params: {"text": "hola mundo", "interval": 0.01}

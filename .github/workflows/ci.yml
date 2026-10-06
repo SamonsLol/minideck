@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff
-      - run: ruff check server tests examples
+      - run: ruff check server tests examples packaging
 
   test:
     strategy:
@@ -34,8 +34,23 @@ jobs:
           cache: pip
       # Solo lo necesario para los tests: las dependencias de escritorio
       # (pyautogui, pyobjc, pycaw…) no hacen falta y no se instalan en CI.
-      - run: pip install fastapi "uvicorn[standard]" psutil segno pytest httpx
-      - run: pytest -q
+      - run: pip install fastapi "uvicorn[standard]" psutil segno pytest httpx build hatchling
+      # los tests de interfaz van en su propio job (abajo)
+      - run: pytest -q --ignore=tests/test_ui.py
+
+  ui:
+    # Navegador real: desbordamientos en 360/390/768 px, carpetas, pulsación
+    # larga, botones con estado, aviso sin conexión, idioma y editor.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install fastapi "uvicorn[standard]" psutil segno pytest httpx playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: pytest -q tests/test_ui.py
 
   frontend:
     runs-on: ubuntu-latest

@@ -87,7 +87,7 @@ def mixer_get(params: dict):
     return {"state": {"mixer": _with_com(_snapshot_unlocked)}}
 
 
-@action("mixer_set")
+@action("mixer_set", schema={"app": {"type": "str", "required": True}, "level": {"type": "int", "min": 0, "max": 100}})
 def mixer_set(params: dict):
     """Volumen de UNA aplicación (todas sus sesiones).
     params: {"app": "chrome.exe", "level": 40}
@@ -109,7 +109,7 @@ def mixer_set(params: dict):
             "state": {"mixer": _with_com(run)}}
 
 
-@action("mixer_mute")
+@action("mixer_mute", schema={"app": {"type": "str", "required": True}, "mute": {"type": "bool"}})
 def mixer_mute(params: dict):
     """Alterna (o fuerza) el mute de una aplicación.
     params: {"app": "chrome.exe"} o {"app": "...", "mute": true/false}

@@ -55,7 +55,7 @@ def volume_get(params: dict):
     return {"state": _get()}
 
 
-@action("volume_set")
+@action("volume_set", schema={"level": {"type": "int", "min": 0, "max": 100, "required": True}})
 def volume_set(params: dict):
     """params: {"level": 50}  (0-100)"""
     level = max(0, min(100, int(params.get("level", 50))))
@@ -63,7 +63,7 @@ def volume_set(params: dict):
     return {"message": f"Volumen: {level}%", "state": _get()}
 
 
-@action("volume_change")
+@action("volume_change", schema={"delta": {"type": "int", "min": -100, "max": 100}})
 def volume_change(params: dict):
     """params: {"delta": 5}  o  {"delta": -5}"""
     delta = int(params.get("delta", 5))
@@ -72,7 +72,7 @@ def volume_change(params: dict):
     return {"message": f"Volumen: {new}%", "state": _get()}
 
 
-@action("volume_mute")
+@action("volume_mute", schema={"mute": {"type": "bool"}})
 def volume_mute(params: dict):
     """Alterna silencio. params: {} o {"mute": true/false} para forzar."""
     target = params.get("mute")
@@ -97,7 +97,7 @@ def mixer_get(params: dict):
     return {"state": {"mixer": _mixer_snapshot()}}
 
 
-@action("mixer_set")
+@action("mixer_set", schema={"app": {"type": "str", "required": True}, "level": {"type": "int", "min": 0, "max": 100}})
 def mixer_set(params: dict):
     """params: {"app": "system", "level": 40}. En macOS ajusta el volumen
     general (macOS no permite volumen por-aplicación desde fuera)."""
@@ -106,7 +106,7 @@ def mixer_set(params: dict):
     return {"message": f"Volumen: {level}%", "state": {"mixer": _mixer_snapshot()}}
 
 
-@action("mixer_mute")
+@action("mixer_mute", schema={"app": {"type": "str", "required": True}, "mute": {"type": "bool"}})
 def mixer_mute(params: dict):
     """Alterna (o fuerza) el silencio del sistema."""
     target = params.get("mute")

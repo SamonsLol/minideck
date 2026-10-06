@@ -7,24 +7,7 @@
   "nowplaying": {
     "offset": 0.3
   },
-  "profiles": {
-    "Code": "desarrollo",
-    "Visual Studio Code": "desarrollo",
-    "Terminal": "desarrollo",
-    "iTerm2": "desarrollo",
-    "Postman": "desarrollo",
-    "Xcode": "desarrollo",
-    "Vivaldi": "web",
-    "Google Chrome": "web",
-    "Safari": "web",
-    "WhatsApp": "comunicacion",
-    "Discord": "comunicacion",
-    "Slack": "comunicacion",
-    "Telegram": "comunicacion",
-    "Claude": "ia",
-    "Music": "multimedia",
-    "Spotify": "multimedia"
-  },
+  "customWidgets": {},
   "pages": [
     {
       "id": "principal",
@@ -40,7 +23,7 @@
           "h": 3
         },
         {
-          "id": "btn_mute",
+          "id": "mm_mute",
           "label": "Silenciar",
           "icon": "lucide:volume-x",
           "color": "#f87171",
@@ -48,33 +31,33 @@
           "params": {}
         },
         {
-          "id": "btn_code",
+          "id": "l_code",
           "label": "VS Code",
-          "icon": "simple-icons:visualstudiocode",
-          "color": "#25b3fa",
+          "icon": "lucide:code",
+          "color": "#60a5fa",
           "action": "launch",
           "params": {
-            "app": "Visual Studio Code"
+            "app": "code"
           }
         },
         {
-          "id": "btn_terminal",
+          "id": "l_term",
           "label": "Terminal",
-          "icon": "lucide:terminal",
+          "icon": "lucide:square-terminal",
           "color": "#34d399",
           "action": "launch",
           "params": {
-            "app": "Terminal"
+            "app": "x-terminal-emulator"
           }
         },
         {
-          "id": "btn_vivaldi",
-          "label": "Vivaldi",
-          "icon": "simple-icons:vivaldi",
-          "color": "#ef4444",
-          "action": "launch",
+          "id": "nav_apps",
+          "label": "Apps",
+          "icon": "lucide:folder",
+          "color": "#fbbf24",
+          "action": "page",
           "params": {
-            "app": "Vivaldi"
+            "page": "apps"
           }
         },
         {
@@ -168,22 +151,6 @@
           "params": {
             "url": "https://music.youtube.com"
           }
-        },
-        {
-          "id": "mm_out",
-          "label": "Salida",
-          "icon": "lucide:speaker",
-          "color": "#60a5fa",
-          "action": "audio_output",
-          "params": {}
-        },
-        {
-          "id": "mm_in",
-          "label": "Micrófono",
-          "icon": "lucide:mic",
-          "color": "#f472b6",
-          "action": "audio_input",
-          "params": {}
         }
       ]
     },
@@ -192,51 +159,24 @@
       "name": "Capturas",
       "buttons": [
         {
-          "id": "cap_region",
-          "label": "Región",
+          "id": "cap_shot",
+          "label": "Captura",
           "icon": "lucide:scan",
-          "color": "#34d399",
-          "action": "screenshot",
-          "params": {
-            "mode": "region"
-          }
-        },
-        {
-          "id": "cap_window",
-          "label": "Ventana",
-          "icon": "lucide:app-window",
           "color": "#60a5fa",
-          "action": "screenshot",
+          "action": "hotkey",
           "params": {
-            "mode": "window"
+            "keys": "print"
           }
         },
         {
-          "id": "cap_full",
-          "label": "Completa",
-          "icon": "lucide:monitor",
+          "id": "cap_reg",
+          "label": "Región",
+          "icon": "lucide:crop",
           "color": "#a78bfa",
-          "action": "screenshot",
+          "action": "hotkey",
           "params": {
-            "mode": "full",
-            "clipboard": false
+            "keys": "shift+print"
           }
-        },
-        {
-          "id": "cap_ocr",
-          "label": "OCR",
-          "icon": "lucide:scan-text",
-          "color": "#fbbf24",
-          "action": "ocr_capture",
-          "params": {}
-        },
-        {
-          "id": "cap_pixel",
-          "label": "Color píxel",
-          "icon": "lucide:pipette",
-          "color": "#ef4444",
-          "action": "pixel_color",
-          "params": {}
         }
       ]
     },
@@ -245,39 +185,29 @@
       "name": "Desarrollo",
       "buttons": [
         {
-          "id": "dev_code",
+          "id": "d_code",
           "label": "VS Code",
-          "icon": "simple-icons:visualstudiocode",
-          "color": "#25b3fa",
+          "icon": "lucide:code",
+          "color": "#60a5fa",
           "action": "launch",
           "params": {
-            "app": "Visual Studio Code"
+            "app": "code"
           }
         },
         {
-          "id": "dev_terminal",
+          "id": "d_term",
           "label": "Terminal",
-          "icon": "lucide:terminal",
+          "icon": "lucide:square-terminal",
           "color": "#34d399",
           "action": "launch",
           "params": {
-            "app": "Terminal"
+            "app": "x-terminal-emulator"
           }
         },
         {
-          "id": "dev_postman",
-          "label": "Postman",
-          "icon": "simple-icons:postman",
-          "color": "#f97316",
-          "action": "launch",
-          "params": {
-            "app": "Postman"
-          }
-        },
-        {
-          "id": "dev_github",
+          "id": "d_gh",
           "label": "GitHub",
-          "icon": "simple-icons:github",
+          "icon": "lucide:github",
           "color": "#e8ecf2",
           "action": "website",
           "params": {
@@ -285,91 +215,13 @@
           }
         },
         {
-          "id": "dev_proyecto",
-          "label": "Proyecto",
-          "icon": "lucide:folder-code",
-          "color": "#fbbf24",
-          "action": "launch",
-          "params": {
-            "path": "~/Documents/minideck"
-          }
-        },
-        {
-          "id": "dev_pull",
-          "label": "git pull",
-          "icon": "simple-icons:git",
-          "color": "#f97316",
-          "action": "command",
-          "params": {
-            "cmd": "git pull",
-            "cwd": "~/Documents/minideck"
-          }
-        },
-        {
-          "id": "w_rutnl5",
+          "id": "d_md",
           "label": "MiniDeck",
           "icon": "lucide:github",
           "color": "#60a5fa",
           "action": "website",
           "params": {
             "url": "https://github.com/SamonsLol/minideck"
-          }
-        },
-        {
-          "id": "dev_push",
-          "label": "git push",
-          "icon": "simple-icons:git",
-          "color": "#ef4444",
-          "action": "command",
-          "params": {
-            "cmd": "git push",
-            "cwd": "~/Documents/minideck"
-          }
-        },
-        {
-          "id": "dev_npm",
-          "label": "npm start",
-          "icon": "simple-icons:npm",
-          "color": "#ef4444",
-          "action": "command",
-          "params": {
-            "cmd": "npm start",
-            "cwd": "~/Documents/minideck"
-          }
-        },
-        {
-          "id": "dev_trabajo",
-          "label": "Modo Trabajo",
-          "icon": "lucide:rocket",
-          "color": "#a78bfa",
-          "action": "macro",
-          "params": {
-            "steps": [
-              {
-                "action": "launch",
-                "params": {
-                  "app": "Visual Studio Code"
-                }
-              },
-              {
-                "delay_ms": 400
-              },
-              {
-                "action": "launch",
-                "params": {
-                  "app": "Terminal"
-                }
-              },
-              {
-                "delay_ms": 400
-              },
-              {
-                "action": "launch",
-                "params": {
-                  "app": "Vivaldi"
-                }
-              }
-            ]
           }
         }
       ]
@@ -423,9 +275,9 @@
           "label": "WhatsApp",
           "icon": "simple-icons:whatsapp",
           "color": "#22c55e",
-          "action": "launch",
+          "action": "website",
           "params": {
-            "app": "WhatsApp"
+            "url": "https://web.whatsapp.com"
           }
         },
         {
@@ -479,9 +331,9 @@
           "label": "Claude",
           "icon": "simple-icons:anthropic",
           "color": "#f97316",
-          "action": "launch",
+          "action": "website",
           "params": {
-            "app": "Claude"
+            "url": "https://claude.ai"
           }
         },
         {
@@ -531,13 +383,40 @@
       "name": "Comunicación",
       "buttons": [
         {
+          "id": "dc_mic",
+          "label": "Micro",
+          "icon": "lucide:mic",
+          "color": "#4ade80",
+          "action": "discord_mute",
+          "params": {},
+          "when": {
+            "key": "discord.mute",
+            "icon": "lucide:mic-off",
+            "color": "#f87171",
+            "label": "Micro OFF"
+          }
+        },
+        {
+          "id": "dc_deaf",
+          "label": "Sordina",
+          "icon": "lucide:headphones",
+          "color": "#60a5fa",
+          "action": "discord_deafen",
+          "params": {},
+          "when": {
+            "key": "discord.deaf",
+            "icon": "lucide:headphone-off",
+            "color": "#f87171"
+          }
+        },
+        {
           "id": "com_wa",
           "label": "WhatsApp",
           "icon": "simple-icons:whatsapp",
           "color": "#22c55e",
-          "action": "launch",
+          "action": "website",
           "params": {
-            "app": "WhatsApp"
+            "url": "https://web.whatsapp.com"
           }
         },
         {
@@ -603,97 +482,124 @@
       ]
     },
     {
+      "id": "stream",
+      "name": "Stream",
+      "buttons": [
+        {
+          "id": "obs_panel",
+          "type": "obs",
+          "label": "OBS",
+          "color": "#a78bfa",
+          "w": "full",
+          "h": 1
+        },
+        {
+          "id": "obs_rec",
+          "label": "Grabar",
+          "icon": "lucide:circle",
+          "color": "#8a93a3",
+          "action": "obs_record_toggle",
+          "params": {},
+          "when": {
+            "key": "obs.recording",
+            "icon": "lucide:circle-stop",
+            "color": "#f87171",
+            "label": "Grabando"
+          }
+        },
+        {
+          "id": "obs_live",
+          "label": "Directo",
+          "icon": "lucide:radio",
+          "color": "#8a93a3",
+          "action": "obs_stream_toggle",
+          "params": {},
+          "when": {
+            "key": "obs.streaming",
+            "icon": "lucide:radio-tower",
+            "color": "#f87171",
+            "label": "EN VIVO"
+          }
+        },
+        {
+          "id": "obs_mic",
+          "label": "Mic OBS",
+          "icon": "lucide:mic",
+          "color": "#60a5fa",
+          "action": "obs_mute_toggle",
+          "params": {
+            "input": "Mic/Aux"
+          }
+        },
+        {
+          "id": "obs_replay",
+          "label": "Replay",
+          "icon": "lucide:history",
+          "color": "#fbbf24",
+          "action": "obs_replay_save",
+          "params": {}
+        },
+        {
+          "id": "dc_mic",
+          "label": "Micro",
+          "icon": "lucide:mic",
+          "color": "#4ade80",
+          "action": "discord_mute",
+          "params": {},
+          "when": {
+            "key": "discord.mute",
+            "icon": "lucide:mic-off",
+            "color": "#f87171",
+            "label": "Micro OFF"
+          }
+        },
+        {
+          "id": "dc_deaf",
+          "label": "Sordina",
+          "icon": "lucide:headphones",
+          "color": "#60a5fa",
+          "action": "discord_deafen",
+          "params": {},
+          "when": {
+            "key": "discord.deaf",
+            "icon": "lucide:headphone-off",
+            "color": "#f87171"
+          }
+        }
+      ]
+    },
+    {
       "id": "apps",
       "name": "Apps",
       "buttons": [
         {
-          "id": "app_finder",
-          "label": "Finder",
-          "icon": "lucide:folder",
-          "color": "#38bdf8",
+          "id": "a_files",
+          "label": "Archivos",
+          "icon": "lucide:folder-open",
+          "color": "#fbbf24",
           "action": "launch",
           "params": {
-            "app": "Finder"
+            "path": "~"
           }
         },
         {
-          "id": "app_safari",
-          "label": "Safari",
-          "icon": "simple-icons:safari",
-          "color": "#60a5fa",
+          "id": "a_web",
+          "label": "Firefox",
+          "icon": "lucide:globe",
+          "color": "#f97316",
           "action": "launch",
           "params": {
-            "app": "Safari"
+            "app": "firefox"
           }
         },
         {
-          "id": "app_appstore",
-          "label": "App Store",
-          "icon": "simple-icons:appstore",
-          "color": "#3b82f6",
-          "action": "launch",
+          "id": "nav_back",
+          "label": "Volver",
+          "icon": "lucide:arrow-left",
+          "color": "#8a93a3",
+          "action": "page",
           "params": {
-            "app": "App Store"
-          }
-        },
-        {
-          "id": "app_xcode",
-          "label": "Xcode",
-          "icon": "simple-icons:xcode",
-          "color": "#38bdf8",
-          "action": "launch",
-          "params": {
-            "app": "Xcode"
-          }
-        },
-        {
-          "id": "w_b1uf92",
-          "label": "Chess",
-          "icon": "lucide:chess-knight",
-          "color": "#34d399",
-          "action": "website",
-          "params": {
-            "url": "https://chess.com"
-          }
-        },
-        {
-          "id": "app_quicktime",
-          "label": "QuickTime",
-          "icon": "simple-icons:quicktime",
-          "color": "#22d3ee",
-          "action": "launch",
-          "params": {
-            "app": "QuickTime Player"
-          }
-        },
-        {
-          "id": "app_obsidian",
-          "label": "Obsidian",
-          "icon": "simple-icons:obsidian",
-          "color": "#a78bfa",
-          "action": "launch",
-          "params": {
-            "app": "Obsidian"
-          }
-        },
-        {
-          "id": "app_rayon",
-          "label": "Rayon",
-          "icon": "lucide:server",
-          "color": "#818cf8",
-          "action": "launch",
-          "params": {
-            "app": "Rayon"
-          }
-        },
-        {
-          "id": "app_readspeed",
-          "label": "ReadSpeed",
-          "icon": "lucide:gauge",
-          "color": "#34d399",
-          "action": "launch",
-          "params": {
-            "app": "ReadSpeed"
+            "page": "back"
           }
         }
       ]
@@ -729,63 +635,43 @@
       ]
     },
     {
-      "id": "mac",
-      "name": "Mac",
+      "id": "equipo",
+      "name": "Linux",
       "buttons": [
         {
-          "id": "btn_lock",
+          "id": "s_lock",
           "label": "Bloquear",
           "icon": "lucide:lock",
-          "color": "#a78bfa",
+          "color": "#60a5fa",
           "action": "lock",
           "params": {}
         },
         {
-          "id": "btn_sleep",
+          "id": "s_sleep",
           "label": "Suspender",
           "icon": "lucide:moon",
-          "color": "#818cf8",
+          "color": "#a78bfa",
           "action": "power",
           "params": {
             "mode": "sleep"
           }
         },
         {
-          "id": "btn_capture",
-          "label": "Captura",
-          "icon": "lucide:scan",
-          "color": "#34d399",
-          "action": "screenshot",
-          "params": {
-            "mode": "region"
-          }
-        },
-        {
-          "id": "btn_desktop",
-          "label": "Escritorio",
-          "icon": "lucide:monitor",
-          "color": "#fbbf24",
-          "action": "show_desktop",
-          "params": {}
-        },
-        {
-          "id": "btn_spaces",
-          "label": "Escritorios",
-          "icon": "lucide:layout-grid",
-          "color": "#60a5fa",
-          "action": "mission_control",
-          "params": {}
-        },
-        {
-          "id": "btn_trash",
-          "label": "Papelera",
-          "icon": "lucide:trash-2",
+          "id": "pw_off",
+          "label": "Apagar",
+          "icon": "lucide:power",
           "color": "#f87171",
-          "action": "empty_trash",
-          "params": {}
+          "action": "power",
+          "params": {
+            "mode": "cancel"
+          },
+          "longAction": "power",
+          "longParams": {
+            "mode": "shutdown",
+            "delay_s": 60
+          }
         }
       ]
     }
-  ],
-  "customWidgets": {}
+  ]
 }

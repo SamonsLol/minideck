@@ -51,7 +51,7 @@ def volume_get(params: dict):
     return _with_volume(run)
 
 
-@action("volume_set")
+@action("volume_set", schema={"level": {"type": "int", "min": 0, "max": 100, "required": True}})
 def volume_set(params: dict):
     """params: {"level": 50}  (0-100)"""
     level = max(0, min(100, int(params.get("level", 50))))
@@ -63,7 +63,7 @@ def volume_set(params: dict):
     return _with_volume(run)
 
 
-@action("volume_change")
+@action("volume_change", schema={"delta": {"type": "int", "min": -100, "max": 100}})
 def volume_change(params: dict):
     """params: {"delta": 5}  o  {"delta": -5}"""
     delta = int(params.get("delta", 5))
@@ -77,7 +77,7 @@ def volume_change(params: dict):
     return _with_volume(run)
 
 
-@action("volume_mute")
+@action("volume_mute", schema={"mute": {"type": "bool"}})
 def volume_mute(params: dict):
     """Alterna silencio. params: {} o {"mute": true/false} para forzar."""
     def run(vol):

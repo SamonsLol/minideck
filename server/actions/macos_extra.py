@@ -52,7 +52,7 @@ def empty_trash(params: dict):
     return {"message": "Papelera vaciada"}
 
 
-@action("shortcut")
+@action("shortcut", schema={"name": {"type": "str", "required": True}}, timeout=120)
 def shortcut(params: dict):
     """Ejecuta un Atajo de macOS (Shortcuts.app) por su nombre.
     params: {"name": "Nombre del atajo", "input": "opcional"}"""

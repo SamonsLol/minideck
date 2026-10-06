@@ -7,6 +7,8 @@
    ============================================================ */
 
 const $ = (id) => document.getElementById(id);
+// Traducción (i18n.js). Se llama T y no t para no chocar con variables locales.
+const T = (key, vars) => window.MiniDeckI18n.t(key, vars);
 
 const state = {
   ws: null,
@@ -14,6 +16,8 @@ const state = {
   currentPage: null,
   reconnectDelay: 500,   // crece hasta 8s
   pingTimer: null,
+  live: {},              // último estado recibido (para botones con "when")
+  pageHistory: [],       // para "page": "back" (carpetas)
 };
 
 /* ============================================================
@@ -147,6 +151,8 @@ function buildCustom(w, d) {
 
 /* dispatcher de estado: reparte cada clave a su widget */
 function dispatchState(data) {
+  Object.assign(state.live, data);
+  syncStatefulButtons();
   renderSystemState(data);
   syncSliders(data);
   if (typeof data.muted === "boolean") syncMuteButtons(data.muted);
@@ -160,6 +166,63 @@ function dispatchState(data) {
     if (data[s.key] !== undefined) {
       try { s.fn(data[s.key]); } catch (e) { console.error(e); }
     }
+  }
+}
+
+/* ------------------------------------------------ botones con estado
+   Un botón puede cambiar de icono/color/texto según el estado en vivo:
+     "when": { "key": "obs.recording",          ← ruta en el estado
+               "equals": true,                   ← opcional (por defecto: truthy)
+               "icon": "lucide:circle-stop", "color": "#f87171", "label": "Grabando" }
+   La ruta admite claves con puntos (ej. "ha.entities.light.salon.state"):
+   en cada nivel se prueba primero la clave más larga que exista. */
+function statePath(obj, path) {
+  const parts = String(path).split(".");
+  let cur = obj;
+  let i = 0;
+  while (i < parts.length) {
+    if (cur == null || typeof cur !== "object") return undefined;
+    let j = parts.length;
+    for (; j > i; j--) {
+      const k = parts.slice(i, j).join(".");
+      if (Object.prototype.hasOwnProperty.call(cur, k)) { cur = cur[k]; break; }
+    }
+    if (j === i) return undefined;
+    i = j;
+  }
+  return cur;
+}
+
+function whenActive(when) {
+  const v = statePath(state.live, when.key);
+  if ("equals" in when) return String(v) === String(when.equals);
+  return Boolean(v) && v !== "off" && v !== "unavailable";
+}
+
+function paintKey(el, btn, on) {
+  const w = on ? btn.when : {};
+  const color = w.color || btn.color || "#8a93a3";
+  const icon = w.icon || btn.icon;
+  const label = w.label ?? btn.label ?? "";
+  const sig = `${icon}|${color}|${label}`;
+  if (el.dataset.sig === sig) return;
+  el.dataset.sig = sig;
+  el.classList.toggle("is-on", Boolean(on));
+  el.style.setProperty("--led", color);
+  const iconEl = el.querySelector(".icon");
+  iconEl.innerHTML = "";
+  const iconColor = btn.iconColor === "led" || on ? color : (btn.iconColor || "#c9d1dd");
+  renderIcon(iconEl, icon, iconColor);
+  el.querySelector(".label").textContent = label;
+}
+
+function syncStatefulButtons() {
+  if (!state.config || state.editMode) return;
+  const page = state.config.pages.find(p => p.id === state.currentPage);
+  for (const btn of page?.buttons || []) {
+    if (!btn.when?.key) continue;
+    const el = document.querySelector(`.key[data-id="${CSS.escape(btn.id)}"]`);
+    if (el) paintKey(el, btn, whenActive(btn.when));
   }
 }
 
@@ -188,6 +251,7 @@ function connect() {
 
   ws.onopen = () => {
     $("statusDot").classList.add("connected");
+    $("offlineBanner").hidden = true;
     state.reconnectDelay = 500;
     // si quedó un guardado pendiente de cuando no había conexión, enviarlo
     if (state.pendingSave) saveConfig();
@@ -203,6 +267,12 @@ function connect() {
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     if (msg.type === "config") {
+      // el servidor reenvía la config al guardar y también cuando detecta el
+      // cambio en disco: si es idéntica, no repintar (cortaría una pulsación
+      // larga en curso y provoca parpadeos)
+      const json = JSON.stringify(msg.data);
+      if (json === state.configJson && !state.editMode) return;
+      state.configJson = json;
       state.config = msg.data;
       registerCustomWidgets(msg.data);
       ensureCustomLibs().then(() => {
@@ -230,6 +300,8 @@ function connect() {
       MiniDeckAuth.showPairing();
       return;
     }
+    // aviso visible (no solo el punto de estado) mientras se reconecta
+    $("offlineBanner").hidden = false;
     setTimeout(connect, state.reconnectDelay);
     state.reconnectDelay = Math.min(state.reconnectDelay * 2, 8000);
   };
@@ -280,9 +352,12 @@ function renderTabs() {
       b.onclick = fn;
       nav.appendChild(b);
     };
-    mk("＋", addPage, "Nueva página");
-    mk("✎", renamePage, "Renombrar página actual");
-    mk("🗑", deletePage, "Eliminar página actual");
+    mk("＋", addPage, T("tool.addPage"));
+    mk("✎", renamePage, T("tool.renamePage"));
+    mk("🗑", deletePage, T("tool.deletePage"));
+    mk("↶", undoLast, T("tool.undo"));
+    mk("⇩", exportDeck, T("tool.export"));
+    mk("⇧", importDeck, T("tool.import"));
   }
 }
 
@@ -314,7 +389,8 @@ function renderGrid() {
   if (state.editMode) {
     const add = document.createElement("button");
     add.className = "key add-tile";
-    add.innerHTML = `<span class="icon">＋</span><span class="label">Agregar</span>`;
+    add.innerHTML = `<span class="icon">＋</span><span class="label"></span>`;
+    add.querySelector(".label").textContent = T("grid.add");
     add.onclick = () => {
       const w = newWidget();
       currentPage().buttons.push(w);
@@ -356,8 +432,48 @@ function buildKey(btn) {
   label.textContent = btn.label ?? "";
 
   el.append(icon, label);
-  el.onclick = () => press(btn.id, el);
+  if (btn.when?.key) {
+    el.dataset.sig = "";
+    paintKey(el, btn, !state.editMode && whenActive(btn.when));
+  }
+  attachPress(el, btn);
   return el;
+}
+
+/* Toque normal → "action". Mantener pulsado (LONG_MS) → "longAction" si el
+   botón la tiene; el aviso háptico confirma que se disparó. */
+const LONG_MS = 550;
+function attachPress(el, btn) {
+  if (!btn.longAction) {
+    el.onclick = () => press(btn, el);
+    return;
+  }
+  el.classList.add("has-long");
+  let timer = null, fired = false, sx = 0, sy = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+  el.addEventListener("pointerdown", (e) => {
+    if (state.editMode) return;
+    fired = false; sx = e.clientX; sy = e.clientY;
+    // capturar el puntero: la tecla se encoge al pulsarla (:active) y, si es
+    // alta, su borde pasa bajo el dedo y el navegador emitiría pointerleave
+    try { el.setPointerCapture(e.pointerId); } catch { /* sin soporte */ }
+    timer = setTimeout(() => {
+      fired = true;
+      navigator.vibrate?.(30);
+      press(btn, el, true);
+    }, LONG_MS);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 12) cancel();
+  });
+  // solo se cancela si el dedo se desplaza (scroll/swipe), no por pointerleave
+  el.addEventListener("pointerup", cancel);
+  el.addEventListener("pointercancel", cancel);
+  el.oncontextmenu = (e) => e.preventDefault();   // sin menú de "copiar" en iOS
+  el.onclick = () => {
+    if (fired) { fired = false; return; }       // ya se ejecutó la larga
+    press(btn, el);
+  };
 }
 
 /* Slider: ocupa una fila completa. Config:
@@ -435,10 +551,10 @@ function buildNowPlaying(w) {
     <div class="np-main">
       <div class="np-art"></div>
       <div class="np-info">
-        <div class="np-title">Nada sonando</div>
+        <div class="np-title">${T("np.nothing")}</div>
         <div class="np-artist">—</div>
       </div>
-      <button class="np-btn np-lyrics" title="Letra"></button>
+      <button class="np-btn np-lyrics" title="${T("np.lyrics")}"></button>
     </div>
     <div class="np-seek-row">
       <span class="np-time np-pos">0:00</span>
@@ -526,7 +642,7 @@ function syncNowPlaying(np) {
   const dur = el.querySelector(".np-dur");
 
   if (!np.active) {
-    title.textContent = "Nada sonando";
+    title.textContent = T("np.nothing");
     artist.textContent = "—";
     return;
   }
@@ -921,7 +1037,8 @@ function renderIcon(container, icon, color) {
     const [pack, name] = icon.split(":");
     const c = encodeURIComponent(color || "#e8ecf2");
     const img = document.createElement("img");
-    img.src = `https://api.iconify.design/${pack}/${name}.svg?color=${c}`;
+    // vía el servidor: cachea el icono en disco y funciona sin internet
+    img.src = `/iconify/${pack}/${name}.svg?color=${c}`;
     img.alt = "";
     img.onerror = () => { container.textContent = "●"; };
     container.appendChild(img);
@@ -932,14 +1049,37 @@ function renderIcon(container, icon, color) {
 }
 
 /* ------------------------------------------------ acciones */
-function press(buttonId, el) {
-  if (state.ws?.readyState !== WebSocket.OPEN) {
-    toast("Sin conexión con el PC", true);
-    return;
-  }
+function press(btn, el, long = false) {
   el.classList.add("pressed");
   setTimeout(() => el.classList.remove("pressed"), 120);
-  state.ws.send(JSON.stringify({ type: "press", buttonId }));
+  // "page" se resuelve en el cliente: carpetas / navegación entre páginas
+  const act = long ? btn.longAction : btn.action;
+  if (act === "page") {
+    openPageAction((long ? btn.longParams : btn.params)?.page);
+    return;
+  }
+  if (state.ws?.readyState !== WebSocket.OPEN) {
+    toast(T("toast.noConn"), true);
+    return;
+  }
+  state.ws.send(JSON.stringify({ type: "press", buttonId: btn.id, long }));
+}
+
+/* Carpetas: un botón con "action": "page" abre otra página; "back" vuelve. */
+function openPageAction(target) {
+  const pages = state.config.pages;
+  if (target === "back") {
+    const prev = state.pageHistory.pop();
+    if (prev && pages.some(p => p.id === prev)) goToPage(prev, -1, true);
+    return;
+  }
+  if (!pages.some(p => p.id === target)) {
+    toast(T("toast.pageMissing", { page: target }), true);
+    return;
+  }
+  state.pageHistory.push(state.currentPage);
+  if (state.pageHistory.length > 20) state.pageHistory.shift();
+  goToPage(target, 1, true);
 }
 
 function handleResult(msg) {
@@ -949,7 +1089,7 @@ function handleResult(msg) {
     el.classList.add(cls);
     setTimeout(() => el.classList.remove(cls), 500);
   }
-  if (!msg.ok) toast(msg.message || "Error al ejecutar", true);
+  if (!msg.ok) toast(msg.message || T("toast.actionError"), true);
   // toasts en verde: pulsaciones de botón, o avisos informativos como
   // "Letra no encontrada" (mensajes sin estado adjunto). Los resultados
   // con estado (sliders, now playing) no hacen toast para no inundar.
@@ -970,9 +1110,85 @@ function renderSystemState(data) {
    y difunde la config nueva a todos los clientes.
    ============================================================ */
 let actionsList = [];
+let actionsSchema = {};
 function loadActionsList() {
+  MiniDeckAuth.api("/api/actions/schema").then(r => r.json())
+    .then(d => { if (d && typeof d === "object") actionsSchema = d; }).catch(() => {});
   return MiniDeckAuth.api("/api/actions").then(r => r.json())
     .then(a => { if (Array.isArray(a)) actionsList = a; }).catch(() => {});
+}
+
+// Plantilla de params para una acción: del esquema, o del ejemplo del docstring.
+function paramsTemplate(action) {
+  if (action === "page") return { page: "" };
+  const info = actionsSchema[action];
+  if (!info) return {};
+  const out = {};
+  for (const [k, rule] of Object.entries(info.schema || {})) {
+    if (k.startsWith("$")) continue;
+    if (!rule.required && !(info.schema.$oneOf || []).flat().includes(k)) continue;
+    out[k] = rule.choices ? rule.choices[0]
+      : { int: 0, float: 0, bool: false, list: [], dict: {} }[rule.type] ?? "";
+  }
+  if (!Object.keys(out).length && info.example) {
+    try { return JSON.parse(info.example); } catch { /* ejemplo no-JSON */ }
+  }
+  return out;
+}
+
+function actionHint(action) {
+  if (action === "page") return T("ed.pageAction");
+  const info = actionsSchema[action];
+  if (!info) return "";
+  return [info.doc, info.example && `params: ${info.example}`].filter(Boolean).join("\n");
+}
+
+/* ---------------------------------------------- deshacer / importar / exportar */
+function undoLast() {
+  if (state.ws?.readyState !== WebSocket.OPEN) { toast(T("toast.noConn"), true); return; }
+  state.ws.send(JSON.stringify({ type: "undo" }));
+}
+
+function exportDeck() {
+  // "pluginSettings" guarda contraseñas y tokens (OBS, Home Assistant…):
+  // nunca deben salir en un deck pensado para compartir.
+  const { pluginSettings, ...shareable } = state.config;
+  const data = JSON.stringify(shareable, null, 2);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+  const name = (state.config.name || "minideck").replace(/[^\w.-]+/g, "_");
+  a.download = `${name}.deck.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(T("toast.exported"), false);
+}
+
+function importDeck() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json,application/json";
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    let cfg;
+    try {
+      cfg = JSON.parse(await file.text());
+      if (!cfg || !Array.isArray(cfg.pages) || !cfg.pages.length) throw new Error("pages");
+    } catch (e) {
+      toast(T("toast.importBad", { err: e.message.slice(0, 60) }), true);
+      return;
+    }
+    if (!confirm(T("confirm.import", { name: cfg.name || file.name, n: cfg.pages.length }))) return;
+    // conservar los ajustes (y secretos) de plugins que ya hay en este equipo
+    if (state.config.pluginSettings && !cfg.pluginSettings) {
+      cfg.pluginSettings = state.config.pluginSettings;
+    }
+    state.config = cfg;            // el servidor valida y guarda copia (deshacer)
+    state.currentPage = cfg.pages[0].id;
+    saveConfig();
+  };
+  input.click();
 }
 
 const PALETTE = ["#4ade80", "#60a5fa", "#f87171", "#fbbf24",
@@ -996,20 +1212,20 @@ function saveConfig() {
   } else {
     // sin conexión (ej. el iPhone acaba de despertar): guardar al reconectar
     state.pendingSave = true;
-    toast("Sin conexión: se guardará al reconectar", true);
+    toast(T("toast.saveLater"), true);
   }
   render();
 }
 
 function newWidget() {
   return { id: "w_" + Math.random().toString(36).slice(2, 8),
-           label: "Nuevo", icon: "lucide:square", color: "#60a5fa",
+           label: T("w.new"), icon: "lucide:square", color: "#60a5fa",
            action: "hotkey", params: { keys: "" } };
 }
 
 /* ------------------------------------------------ páginas */
 function addPage() {
-  const name = prompt("Nombre de la página nueva:");
+  const name = prompt(T("prompt.newPage"));
   if (!name) return;
   const id = "p_" + Math.random().toString(36).slice(2, 8);
   state.config.pages.push({ id, name, buttons: [] });
@@ -1019,7 +1235,7 @@ function addPage() {
 
 function renamePage() {
   const page = currentPage();
-  const name = prompt("Nuevo nombre de la página:", page.name);
+  const name = prompt(T("prompt.renamePage"), page.name);
   if (!name) return;
   page.name = name;
   saveConfig();
@@ -1027,11 +1243,11 @@ function renamePage() {
 
 function deletePage() {
   if (state.config.pages.length <= 1) {
-    toast("No puedes eliminar la única página", true);
+    toast(T("page.onlyOne"), true);
     return;
   }
   const page = currentPage();
-  if (!confirm(`¿Eliminar la página "${page.name}" y sus ${page.buttons.length} widgets?`)) return;
+  if (!confirm(T("confirm.deletePage", { name: page.name, n: page.buttons.length }))) return;
   state.config.pages = state.config.pages.filter(p => p.id !== page.id);
   state.currentPage = state.config.pages[0].id;
   saveConfig();
@@ -1047,32 +1263,32 @@ function ensureSheet() {
   sheet.className = "sheet";
   sheet.innerHTML = `
     <div class="sheet-head">
-      <span>Editar widget</span>
+      <span data-i18n="ed.title"></span>
       <button class="sheet-close">✕</button>
     </div>
     <div class="sheet-body">
-      <label class="f-row">Nombre
+      <label class="f-row"><span data-i18n="ed.name"></span>
         <input class="f-label" type="text" autocomplete="off"></label>
-      <label class="f-row">Icono
+      <label class="f-row"><span data-i18n="ed.icon"></span>
         <div class="f-icon-row">
           <span class="f-icon-prev"></span>
           <input class="f-icon" type="text" autocomplete="off"
                  placeholder="lucide:play · 🎮 · img:custom/x.png">
-          <button type="button" class="f-icon-pick" title="Buscar icono">🔍</button>
+          <button type="button" class="f-icon-pick" data-i18n-title="ed.searchIcon">🔍</button>
         </div></label>
-      <div class="f-row">Color
+      <div class="f-row"><span data-i18n="ed.color"></span>
         <div class="swatches"></div>
         <input class="f-color" type="text" autocomplete="off" placeholder="#60a5fa">
       </div>
       <div class="f-grid3">
-        <label class="f-row">Tipo
+        <label class="f-row"><span data-i18n="ed.type"></span>
           <select class="f-type"></select></label>
-        <label class="f-row">Ancho
+        <label class="f-row"><span data-i18n="ed.width"></span>
           <select class="f-w">
             <option value="1">1</option><option value="2">2</option>
-            <option value="3">3</option><option value="full">Fila</option>
+            <option value="3">3</option><option value="full" data-i18n="ed.row"></option>
           </select></label>
-        <label class="f-row">Alto
+        <label class="f-row"><span data-i18n="ed.height"></span>
           <select class="f-h">
             <option value="1">1</option><option value="2">2</option>
             <option value="3">3</option><option value="4">4</option>
@@ -1080,26 +1296,39 @@ function ensureSheet() {
           </select></label>
       </div>
       <div class="only-action">
-        <label class="f-row row-action">Acción
+        <label class="f-row row-action"><span data-i18n="ed.action"></span>
           <select class="f-action"></select></label>
-        <label class="f-row">Parámetros (JSON)
+        <div class="f-hint"></div>
+        <label class="f-row"><span data-i18n="ed.params"></span>
           <textarea class="f-params" rows="4" spellcheck="false"
                     autocorrect="off" autocapitalize="off"></textarea></label>
       </div>
+      <div class="only-key">
+        <label class="f-row"><span data-i18n="ed.long"></span>
+          <select class="f-long"></select></label>
+        <label class="f-row row-long-params"><span data-i18n="ed.longParams"></span>
+          <textarea class="f-long-params" rows="3" spellcheck="false"
+                    autocorrect="off" autocapitalize="off"></textarea></label>
+        <label class="f-row"><span data-i18n="ed.when"></span>
+          <textarea class="f-when" rows="3" spellcheck="false" autocorrect="off"
+                    autocapitalize="off"></textarea></label>
+      </div>
       <div class="only-slider f-grid3">
-        <label class="f-row">Mín <input class="f-min" type="number"></label>
-        <label class="f-row">Máx <input class="f-max" type="number"></label>
-        <label class="f-row">Parám. valor <input class="f-vparam" type="text"></label>
-        <label class="f-row">Bind estado <input class="f-bind" type="text"
+        <label class="f-row"><span data-i18n="ed.min"></span> <input class="f-min" type="number"></label>
+        <label class="f-row"><span data-i18n="ed.max"></span> <input class="f-max" type="number"></label>
+        <label class="f-row"><span data-i18n="ed.vparam"></span> <input class="f-vparam" type="text"></label>
+        <label class="f-row"><span data-i18n="ed.bind"></span> <input class="f-bind" type="text"
                placeholder="volume"></label>
       </div>
       <div class="sheet-tools">
-        <button class="t-test">Probar</button>
-        <button class="t-dup">Duplicar</button>
-        <button class="t-del">Eliminar</button>
+        <button class="t-test" data-i18n="ed.test"></button>
+        <button class="t-dup" data-i18n="ed.dup"></button>
+        <button class="t-del" data-i18n="ed.del"></button>
       </div>
-      <button class="sheet-save">Guardar</button>
+      <button class="sheet-save" data-i18n="ed.save"></button>
     </div>`;
+  window.MiniDeckI18n.apply(sheet);
+  sheet.querySelector(".f-when").placeholder = T("ed.whenHint");
   document.body.appendChild(sheet);
 
   // paleta de colores
@@ -1117,10 +1346,30 @@ function ensureSheet() {
   sheet.querySelector(".f-icon").addEventListener("input", () => refreshIconPreview(sheet));
   sheet.querySelector(".f-color").addEventListener("input", () => refreshIconPreview(sheet));
   sheet.querySelector(".f-type").onchange = () => syncTypeFields(sheet);
+  // al cambiar de acción: ayuda + plantilla de params (si no había nada escrito)
+  sheet.querySelector(".f-action").onchange = () => {
+    const act = sheet.querySelector(".f-action").value;
+    sheet.querySelector(".f-hint").textContent = actionHint(act);
+    const ta = sheet.querySelector(".f-params");
+    let cur = {};
+    try { cur = JSON.parse(ta.value || "{}"); } catch { /* se respeta lo escrito */ }
+    if (!Object.keys(cur).length || ta.dataset.template === ta.value) {
+      ta.value = JSON.stringify(paramsTemplate(act), null, 2);
+      ta.dataset.template = ta.value;
+    }
+  };
+  sheet.querySelector(".f-long").onchange = () => {
+    const act = sheet.querySelector(".f-long").value;
+    sheet.querySelector(".row-long-params").style.display = act ? "" : "none";
+    const ta = sheet.querySelector(".f-long-params");
+    if (act && (!ta.value.trim() || ta.value.trim() === "{}")) {
+      ta.value = JSON.stringify(paramsTemplate(act), null, 2);
+    }
+  };
   sheet.querySelector(".sheet-save").onclick = () => applyEditor(sheet);
   sheet.querySelector(".t-del").onclick = () => {
     const i = Number(sheet.dataset.index);
-    if (!confirm("¿Eliminar este widget?")) return;
+    if (!confirm(T("confirm.deleteWidget"))) return;
     currentPage().buttons.splice(i, 1);
     closeSheet();
     saveConfig();
@@ -1164,6 +1413,8 @@ function syncTypeFields(sheet) {
     (def?.noAction || def?.keepParams) ? "none" : "";
   sheet.querySelector(".only-slider").style.display =
     (t === "slider" || def?.slider) ? "" : "none";
+  // pulsación larga y estado: solo para botones normales
+  sheet.querySelector(".only-key").style.display = t === "button" ? "" : "none";
 }
 
 function refreshIconPreview(sheet) {
@@ -1179,14 +1430,24 @@ function refreshIconPreview(sheet) {
 let _lucideNames = null;
 async function lucideNames() {
   if (_lucideNames) return _lucideNames;
-  try {
-    const r = await fetch("https://api.iconify.design/collection?prefix=lucide");
-    const d = await r.json();
-    const set = new Set(d.uncategorized || []);
-    for (const arr of Object.values(d.categories || {})) arr.forEach(n => set.add(n));
-    _lucideNames = [...set].sort();
-  } catch { _lucideNames = []; }
-  return _lucideNames;
+  // Iconify y, si no responde, la lista de lucide-static en jsDelivr
+  const sources = [
+    async () => {
+      const d = await (await fetch("https://api.iconify.design/collection?prefix=lucide")).json();
+      const set = new Set(d.uncategorized || []);
+      for (const arr of Object.values(d.categories || {})) arr.forEach(n => set.add(n));
+      return [...set];
+    },
+    async () => Object.keys(await (await fetch(
+      "https://cdn.jsdelivr.net/npm/lucide-static@latest/tags.json")).json()),
+  ];
+  for (const src of sources) {
+    try {
+      const names = await src();
+      if (names.length) { _lucideNames = names.sort(); return _lucideNames; }
+    } catch { /* siguiente fuente */ }
+  }
+  return [];
 }
 
 function openIconPicker(sheet) {
@@ -1197,7 +1458,7 @@ function openIconPicker(sheet) {
     ov.innerHTML = `
       <div class="ip-head">
         <input class="ip-search" type="text" autocomplete="off"
-               placeholder="Buscar icono de lucide…">
+               placeholder="">
         <button class="ip-close" type="button">✕</button>
       </div>
       <div class="ip-grid"></div>`;
@@ -1206,6 +1467,7 @@ function openIconPicker(sheet) {
     ov.querySelector(".ip-search").addEventListener("input", () => renderIconGrid(ov));
   }
   ov._sheet = sheet;
+  ov.querySelector(".ip-search").placeholder = T("ip.search");
   ov.classList.add("open");
   ov.querySelector(".ip-search").value = "";
   renderIconGrid(ov);
@@ -1215,10 +1477,10 @@ function openIconPicker(sheet) {
 async function renderIconGrid(ov) {
   const grid = ov.querySelector(".ip-grid");
   const q = ov.querySelector(".ip-search").value.trim().toLowerCase();
-  grid.innerHTML = '<div class="ip-empty">Cargando…</div>';
+  grid.innerHTML = `<div class="ip-empty">${T("ip.loading")}</div>`;
   const names = await lucideNames();
   if (!names.length) {
-    grid.innerHTML = '<div class="ip-empty">Sin conexión para cargar iconos</div>';
+    grid.innerHTML = `<div class="ip-empty">${T("ip.offline")}</div>`;
     return;
   }
   const list = (q ? names.filter(n => n.includes(q)) : names).slice(0, 180);
@@ -1229,7 +1491,7 @@ async function renderIconGrid(ov) {
     b.type = "button";
     b.title = n;
     b.innerHTML =
-      `<img src="https://api.iconify.design/lucide/${n}.svg?color=%23888" alt="">` +
+      `<img src="/iconify/lucide/${n}.svg?color=%23888" alt="" loading="lazy">` +
       `<span>${n}</span>`;
     b.onclick = () => {
       ov._sheet.querySelector(".f-icon").value = "lucide:" + n;
@@ -1238,7 +1500,7 @@ async function renderIconGrid(ov) {
     };
     grid.appendChild(b);
   }
-  if (!list.length) grid.innerHTML = '<div class="ip-empty">Sin resultados</div>';
+  if (!list.length) grid.innerHTML = `<div class="ip-empty">${T("ip.none")}</div>`;
 }
 
 function openEditor(index) {
@@ -1250,7 +1512,7 @@ function openEditor(index) {
   // tipos disponibles: botón + todos los widgets registrados (incl. plugins)
   const tsel = sheet.querySelector(".f-type");
   tsel.innerHTML = "";
-  for (const [val, label] of [["button", "Botón"],
+  for (const [val, label] of [["button", T("ed.button")],
        ...Object.entries(WIDGETS).map(([t, d]) => [t, d.label || t])]) {
     const o = document.createElement("option");
     o.value = val; o.textContent = label;
@@ -1265,20 +1527,37 @@ function openEditor(index) {
   sheet.querySelector(".f-w").value = String(w.w ?? 1);
   sheet.querySelector(".f-h").value = String(w.h ?? 1);
 
-  const sel = sheet.querySelector(".f-action");
-  sel.innerHTML = "";
-  for (const a of actionsList) {
-    const o = document.createElement("option");
-    o.value = o.textContent = a;
-    sel.appendChild(o);
-  }
-  if (w.action && !actionsList.includes(w.action)) {
-    const o = document.createElement("option");
-    o.value = o.textContent = w.action;
-    sel.appendChild(o);
-  }
-  sel.value = w.action ?? "";
-  sheet.querySelector(".f-params").value = JSON.stringify(w.params ?? {}, null, 2);
+  // acciones del servidor + "page" (carpetas, se resuelve en el cliente)
+  const allActions = ["page", ...actionsList];
+  const fillActions = (sel, current, withNone) => {
+    sel.innerHTML = "";
+    if (withNone) {
+      const o = document.createElement("option");
+      o.value = ""; o.textContent = T("ed.longNone");
+      sel.appendChild(o);
+    }
+    for (const a of allActions) {
+      const o = document.createElement("option");
+      o.value = o.textContent = a;
+      sel.appendChild(o);
+    }
+    if (current && !allActions.includes(current)) {
+      const o = document.createElement("option");
+      o.value = o.textContent = current;
+      sel.appendChild(o);
+    }
+    sel.value = current ?? "";
+  };
+  fillActions(sheet.querySelector(".f-action"), w.action, false);
+  fillActions(sheet.querySelector(".f-long"), w.longAction, true);
+  sheet.querySelector(".f-hint").textContent = actionHint(w.action);
+  const pta = sheet.querySelector(".f-params");
+  pta.value = JSON.stringify(w.params ?? {}, null, 2);
+  pta.dataset.template = "";
+  sheet.querySelector(".f-long-params").value =
+    w.longAction ? JSON.stringify(w.longParams ?? {}, null, 2) : "";
+  sheet.querySelector(".row-long-params").style.display = w.longAction ? "" : "none";
+  sheet.querySelector(".f-when").value = w.when ? JSON.stringify(w.when, null, 2) : "";
   sheet.querySelector(".f-min").value = w.min ?? 0;
   sheet.querySelector(".f-max").value = w.max ?? 100;
   sheet.querySelector(".f-vparam").value = w.valueParam ?? "level";
@@ -1289,33 +1568,57 @@ function openEditor(index) {
   sheet.classList.add("open");
 }
 
-function readEditor(sheet) {
-  const ta = sheet.querySelector(".f-params");
+/* Lee un <textarea> JSON. iOS convierte comillas rectas en tipográficas
+   ("" '' y guiones largos): se normalizan para que el JSON sea válido.
+   Vacío → `empty`. Error → undefined (y marca el campo). */
+function readJsonField(ta, field, empty) {
   ta.classList.remove("err");
-  // iOS convierte comillas rectas en tipográficas ("" '' y guiones largos):
-  // normalizarlas para que el JSON escrito en el iPhone sea válido
-  const raw = (ta.value || "{}")
+  const raw = (ta.value || "").trim()
     .replace(/[\u201C\u201D\u201E\u2033]/g, '"')
     .replace(/[\u2018\u2019\u2032]/g, "'")
     .replace(/\u2014/g, "-");
-  let params;
+  if (!raw) return empty;
   try {
-    params = JSON.parse(raw);
+    const v = JSON.parse(raw);
+    ta.value = JSON.stringify(v, null, 2);   // dejar la versión limpia
+    return v;
   } catch (e) {
     ta.classList.add("err");
-    toast(`Parámetros: JSON inválido (${e.message.slice(0, 60)})`, true);
-    return null;
+    toast(T("ed.badJson", { field, err: e.message.slice(0, 60) }), true);
+    return undefined;
   }
-  ta.value = JSON.stringify(params, null, 2);  // dejar la versión limpia
+}
+
+// Campos que gestiona el formulario; el resto (de plugins, o escritos a
+// mano en deck.json) se conserva al guardar.
+const EDITOR_FIELDS = ["label", "icon", "color", "type", "w", "h", "action", "params",
+                       "min", "max", "valueParam", "bind", "longAction", "longParams", "when"];
+
+function readEditor(sheet) {
+  const params = readJsonField(sheet.querySelector(".f-params"), T("ed.params"), {});
+  if (params === undefined) return null;
+  const longAct = sheet.querySelector(".f-long").value;
+  const longParams = longAct
+    ? readJsonField(sheet.querySelector(".f-long-params"), T("ed.longParams"), {})
+    : null;
+  if (longParams === undefined) return null;
+  const when = readJsonField(sheet.querySelector(".f-when"), T("ed.when"), null);
+  if (when === undefined) return null;
+
   const type = sheet.querySelector(".f-type").value;
   const wsel = sheet.querySelector(".f-w").value;
-  const w = {
-    id: currentPage().buttons[Number(sheet.dataset.index)]?.id
-        ?? "w_" + Math.random().toString(36).slice(2, 8),
+  const prev = currentPage().buttons[Number(sheet.dataset.index)] || {};
+  const w = Object.fromEntries(Object.entries(prev).filter(([k]) => !EDITOR_FIELDS.includes(k)));
+  Object.assign(w, {
+    id: prev.id ?? "w_" + Math.random().toString(36).slice(2, 8),
     label: sheet.querySelector(".f-label").value.trim(),
     icon: sheet.querySelector(".f-icon").value.trim(),
     color: sheet.querySelector(".f-color").value.trim() || "#8a93a3",
-  };
+  });
+  if (type === "button") {
+    if (longAct) { w.longAction = longAct; w.longParams = longParams; }
+    if (when && when.key) w.when = when;
+  }
   if (type !== "button") w.type = type;
   if (wsel !== "1") w.w = wsel === "full" ? "full" : Number(wsel);
   const h = Number(sheet.querySelector(".f-h").value);
@@ -1503,7 +1806,7 @@ function applyTheme(t) {
   else document.documentElement.removeAttribute("data-theme");
   try { localStorage.setItem("minideck-theme", t); } catch (e) {}
   $("themeBtn").classList.toggle("active", t === "lcd");
-  toast(t === "lcd" ? "Tema: LCD" : "Tema: Oscuro", false);
+  toast(T("toast.theme", { name: t === "lcd" ? "LCD" : (MiniDeckI18n.lang === "es" ? "Oscuro" : "Dark") }), false);
 }
 function toggleTheme() {
   const i = THEMES.indexOf(currentTheme());
@@ -1633,6 +1936,17 @@ $("profileBtn").onclick = toggleAutoProfile;
 $("profileBtn").classList.toggle("active", state.autoProfile);
 $("editBtn").onclick = toggleEdit;
 $("themeBtn").onclick = toggleTheme;
+// idioma: alterna entre los disponibles y repinta la interfaz
+function paintLangBtn() { $("langBtn").textContent = MiniDeckI18n.lang.toUpperCase(); }
+paintLangBtn();
+$("langBtn").onclick = () => {
+  const langs = MiniDeckI18n.languages;
+  MiniDeckI18n.setLang(langs[(langs.indexOf(MiniDeckI18n.lang) + 1) % langs.length]);
+  paintLangBtn();
+  $("editSheet")?.remove();           // se reconstruye en el idioma nuevo
+  if (state.config) render();
+  toast(T("toast.lang"), false);
+};
 $("fsBtn").onclick = toggleFullscreen;
 $("fsExit").onclick = toggleFullscreen;
 $("themeBtn").classList.toggle("active", currentTheme() === "lcd");
@@ -1668,7 +1982,9 @@ MiniDeckAuth.ensure().then((token) => {
     e.preventDefault();
     if (standalone || !b) return;
     const btn = $("a2hsInstall");
-    $("a2hsText").textContent = "Instala MiniDeck como app (pantalla completa).";
+    $("a2hsText").textContent = MiniDeckI18n.lang === "es"
+      ? "Instala MiniDeck como app (pantalla completa)."
+      : "Install MiniDeck as an app (full screen).";
     btn.style.display = "";
     btn.onclick = async () => {
       btn.disabled = true;

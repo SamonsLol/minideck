@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="theme-color" content="#0f1216">
 
-  <link rel="stylesheet" href="style.css?v=40">
+  <link rel="stylesheet" href="style.css?v=41">
   <!-- aplica el tema guardado antes de pintar, para evitar parpadeo -->
   <script>
     try { var t = localStorage.getItem("minideck-theme");
@@ -31,20 +31,20 @@
 
   <header class="topbar">
     <div class="brand">
-      <span class="status-dot" id="statusDot" title="Estado de conexión"></span>
+      <span class="status-dot" id="statusDot" data-i18n-title="status.title"></span>
       <h1 id="deckName">MiniDeck</h1>
       <span class="version">v1.0</span>
     </div>
     <div class="top-right">
       <div class="system-state" id="systemState"></div>
-      <button class="icon-btn" id="profileBtn" title="Cambiar de página según la app activa">◎</button>
-      <button class="icon-btn" id="themeBtn" title="Cambiar tema">◑</button>
-      <button class="icon-btn" id="fsBtn" title="Pantalla completa">⛶</button>
-      <button class="icon-btn" id="editBtn" title="Editar deck">✎</button>
+      <button class="icon-btn" id="profileBtn" data-i18n-title="top.profile">◎</button>
+      <button class="icon-btn" id="themeBtn" data-i18n-title="top.theme">◑</button>
+      <button class="icon-btn" id="fsBtn" data-i18n-title="top.fullscreen">⛶</button>
+      <button class="icon-btn" id="editBtn" data-i18n-title="top.edit">✎</button>
+      <button class="icon-btn lang-btn" id="langBtn" data-i18n-title="top.lang">ES</button>
       <a class="icon-btn about-link" id="aboutBtn" href="https://github.com/SamonsLol/minideck"
          target="_blank" rel="noopener"
-         title="MiniDeck © Samons — software libre bajo AGPL-3.0-or-later, sin garantía. Código fuente y licencia"
-         aria-label="Acerca de MiniDeck: licencia y código fuente">ⓘ</a>
+         data-i18n-title="top.about">ⓘ</a>
     </div>
   </header>
 
@@ -52,17 +52,20 @@
 
   <main class="grid" id="grid"></main>
 
-  <button class="fs-exit" id="fsExit" title="Salir de pantalla completa">✕</button>
+  <button class="fs-exit" id="fsExit" data-i18n-title="fs.exit">✕</button>
+
+  <div class="offline-banner" id="offlineBanner" role="alert" data-i18n="offline" hidden></div>
 
   <div class="a2hs" id="a2hs">
-    <span id="a2hsText">Para verla a pantalla completa: <b>Compartir</b> ⬆️ → <b>Añadir a pantalla de inicio</b>, y ábrela desde ese icono.</span>
-    <button id="a2hsInstall" style="display:none">Instalar</button>
-    <button id="a2hsClose" title="Cerrar">✕</button>
+    <span id="a2hsText" data-i18n="a2hs.text"></span>
+    <button id="a2hsInstall" style="display:none" data-i18n="a2hs.install">Install</button>
+    <button id="a2hsClose" data-i18n-title="a2hs.close">✕</button>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="auth.js?v=40"></script>
-  <script src="app.js?v=40"></script>
+  <script src="i18n.js?v=41"></script>
+  <script src="auth.js?v=41"></script>
+  <script src="app.js?v=41"></script>
 </body>
 </html>

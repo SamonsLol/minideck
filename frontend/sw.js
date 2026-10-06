@@ -3,8 +3,8 @@
 /* Service worker mínimo: cachea los estáticos de la interfaz (red primero,
    caché como respaldo sin conexión). Nunca cachea /api ni nada con token.
    Solo se registra bajo HTTPS o localhost (limitación del navegador). */
-const CACHE = "minideck-v2";
-const ASSETS = ["/", "/style.css", "/auth.js", "/app.js"];
+const CACHE = "minideck-v3";
+const ASSETS = ["/", "/style.css", "/i18n.js", "/auth.js", "/app.js"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));

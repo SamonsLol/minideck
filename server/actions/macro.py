@@ -3,10 +3,10 @@
 """Macro: ejecuta una secuencia de acciones con pausas opcionales."""
 import time
 
-from . import REGISTRY, action
+from . import REGISTRY, action, validate_params
 
 
-@action("macro")
+@action("macro", schema={"steps": {"type": "list", "required": True}}, timeout=300)
 def macro(params: dict):
     """Ejecuta pasos en orden.
     params: {
@@ -30,7 +30,12 @@ def macro(params: dict):
             fn = REGISTRY.get(name)
             if fn is None:
                 raise ValueError(f"Paso {i}: acción desconocida '{name}'")
-            fn(step.get("params") or {})
+            step_params = dict(step.get("params") or {})
+            try:
+                validate_params(name, step_params)
+            except ValueError as exc:
+                raise ValueError(f"Paso {i} ({name}): {exc}") from None
+            fn(step_params)
             executed += 1
         delay = step.get("delay_ms")
         if delay:

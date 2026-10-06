@@ -9,7 +9,7 @@ import webbrowser
 from . import action
 
 
-@action("launch")
+@action("launch", schema={"path": {"type": "str"}, "app": {"type": "str"}, "args": {"type": "list"}, "$oneOf": [["path", "app"]]})
 def launch(params: dict):
     """Abre una aplicación o archivo con su programa asociado.
     params: {"path": "C:/Program Files/.../app.exe", "args": ["--flag"]}
@@ -38,7 +38,7 @@ def launch(params: dict):
     return {"message": f"Abriendo: {os.path.basename(path)}"}
 
 
-@action("command")
+@action("command", schema={"cmd": {"type": "str", "required": True}, "shell": {"type": "str", "choices": ["cmd", "powershell"]}})
 def command(params: dict):
     """Ejecuta un comando de consola (cmd o PowerShell).
     params: {"cmd": "shutdown /s /t 60", "shell": "powershell"}  # shell opcional
@@ -57,7 +57,7 @@ def command(params: dict):
     return {"message": "Comando ejecutado"}
 
 
-@action("website")
+@action("website", schema={"url": {"type": "str", "required": True}})
 def website(params: dict):
     """Abre una URL en el navegador por defecto.
     params: {"url": "https://youtube.com"}

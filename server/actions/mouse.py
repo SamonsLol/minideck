@@ -17,7 +17,7 @@ from . import action
 pyautogui.FAILSAFE = True  # mover el ratón a la esquina sup. izq. aborta
 
 
-@action("mouse_click")
+@action("mouse_click", schema={"x": {"type": "int", "required": True}, "y": {"type": "int", "required": True}, "clicks": {"type": "int", "min": 1, "max": 10}, "button": {"type": "str", "choices": ["left", "right", "middle"]}})
 def mouse_click(params: dict):
     """Clic en coordenadas absolutas de pantalla.
     params: {"x": 960, "y": 540, "button": "left", "clicks": 1}
@@ -32,7 +32,7 @@ def mouse_click(params: dict):
     return {"message": f"Clic en ({x}, {y})"}
 
 
-@action("mouse_move")
+@action("mouse_move", schema={"x": {"type": "int", "required": True}, "y": {"type": "int", "required": True}})
 def mouse_move(params: dict):
     """Mueve el cursor sin hacer clic. params: {"x": 100, "y": 200}"""
     pyautogui.moveTo(int(params.get("x", 0)), int(params.get("y", 0)))

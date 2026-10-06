@@ -1,15 +1,83 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
 [project]
 name = "minideck"
 version = "1.0.0"
-description = "Control remoto tipo Stream Deck para tu PC/Mac desde el navegador del móvil"
+description = "Turn your phone into a Stream Deck for your PC or Mac (Python server + PWA)"
 readme = "README.md"
-license = { text = "AGPL-3.0-or-later" }
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [{ name = "Samons" }]
+keywords = ["stream deck", "macro", "remote", "pwa", "obs", "home assistant"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Utilities",
+]
+# Mismas dependencias que requirements.txt (con marcadores por sistema).
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "psutil>=5.9",
+    "segno>=1.6",
+    "pyautogui>=0.9.54",
+    "keyboard>=0.13.5; sys_platform == 'win32'",
+    "pycaw>=20240210; sys_platform == 'win32'",
+    "comtypes>=1.4; sys_platform == 'win32'",
+    "winsdk>=1.0.0b10; sys_platform == 'win32' and python_version < '3.13'",
+    "pystray>=0.19; sys_platform == 'win32'",
+    "Pillow>=10; sys_platform == 'win32'",
+    "pyobjc>=10; sys_platform == 'darwin'",
+    "rumps>=0.4; sys_platform == 'darwin'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.6", "playwright>=1.45"]
+
+[project.scripts]
+minideck = "minideck_launcher:main"
+
+[project.gui-scripts]
+minideck-tray = "minideck_launcher:tray"
 
 [project.urls]
 Homepage = "https://github.com/SamonsLol/minideck"
 Issues = "https://github.com/SamonsLol/minideck/issues"
+Changelog = "https://github.com/SamonsLol/minideck/blob/main/CHANGELOG.md"
+
+# El wheel lleva el lanzador + server/ y frontend/ dentro de minideck_app/.
+# NUNCA deben entrar datos personales: ver la lista exclude (y el test
+# tests/test_packaging.py, que lo comprueba construyendo el wheel).
+[tool.hatch.build]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "server/config/deck.json",
+    "server/config/discord.json",
+    "server/config/auth_token",
+    "server/config/backups",
+    "server/config/*.tmp",
+    "**/.DS_Store",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["packaging/minideck_launcher.py", "server", "frontend"]
+
+[tool.hatch.build.targets.wheel.sources]
+"packaging" = ""
+"server" = "minideck_app/server"
+"frontend" = "minideck_app/frontend"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["packaging", "server", "frontend", "LICENSE", "README.md", "requirements.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -28,6 +96,10 @@ ignore = [
     "B008",
     "UP007",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# los esquemas de params van en una sola línea del decorador @action
+"server/actions/*.py" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["actions", "auth", "main", "paths", "version"]

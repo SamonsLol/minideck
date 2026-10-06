@@ -1,0 +1,93 @@
+# Publica una versión: al subir un tag vX.Y.Z se construyen el .zip de
+# Windows, el .dmg de macOS y el paquete de pip, y se adjuntan a la Release.
+#   git tag v1.1.0 && git push origin v1.1.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - run: pyinstaller build/minideck-win.spec --noconfirm --distpath dist --workpath build/work
+      - name: Comprobar que no se empaquetan datos personales
+        shell: bash
+        run: |
+          if find dist/MiniDeck -name 'deck.json' -o -name 'discord.json' -o -name 'auth_token' | grep -q .; then
+            echo "::error::El paquete contiene datos personales"; exit 1
+          fi
+      - name: Comprimir
+        shell: pwsh
+        run: Compress-Archive -Path dist/MiniDeck -DestinationPath "MiniDeck-${{ github.ref_name }}-windows.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: MiniDeck-*-windows.zip
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-mac.txt
+      - run: pyinstaller build/minideck.spec --noconfirm --distpath dist --workpath build/work
+      - run: codesign --deep --force --sign - dist/MiniDeck.app
+      - name: Comprobar que no se empaquetan datos personales
+        run: |
+          if find dist/MiniDeck.app -name 'deck.json' -o -name 'discord.json' -o -name 'auth_token' | grep -q .; then
+            echo "::error::El paquete contiene datos personales"; exit 1
+          fi
+      - name: Crear DMG
+        run: |
+          STAGE="$(mktemp -d)"
+          cp -R dist/MiniDeck.app "$STAGE/"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname MiniDeck -srcfolder "$STAGE" -ov -format UDZO \
+            "MiniDeck-${{ github.ref_name }}-macos.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: MiniDeck-*-macos.dmg
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python
+          path: dist/*
+
+  release:
+    needs: [windows, macos, python]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/*

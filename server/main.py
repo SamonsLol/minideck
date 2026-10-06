@@ -18,7 +18,10 @@ import re
 import socket
 import subprocess
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+from logging.handlers import RotatingFileHandler
 
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -26,20 +29,57 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 import auth
+import icons
 from actions import (
+    META,
     OWNERS,
     PLUGINS,
     REGISTRY,
     STATE_SOURCES,
+    describe_actions,
     frontend_assets,
     load_all_actions,
     plugin_file,
+    validate_params,
 )
-from paths import CERT_FILE, CONFIG_PATH, FRONTEND_DIR, KEY_FILE, ensure_dirs
+from paths import (
+    BACKUP_DIR,
+    CERT_FILE,
+    CONFIG_PATH,
+    FRONTEND_DIR,
+    KEY_FILE,
+    LOG_DIR,
+    ensure_dirs,
+)
 from version import LICENSE, PLUGIN_API, SOURCE_URL, __version__
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
+_LOG_FMT = "%(asctime)s  %(levelname)s  %(name)s  %(message)s"
+logging.basicConfig(level=logging.INFO, format=_LOG_FMT)
 log = logging.getLogger("minideck")
+LOG_FILE = LOG_DIR / "minideck.log"
+try:
+    # Sin consola (MiniDeck.bat, app empaquetada) el log es la única pista
+    # cuando algo falla: archivo con rotación, máx. ~3 MB en total.
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    _fh = RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=2, encoding="utf-8")
+    _fh.setFormatter(logging.Formatter(_LOG_FMT))
+    logging.getLogger().addHandler(_fh)
+except OSError as _exc:  # disco de solo lectura, permisos…: seguir sin archivo
+    log.warning("No se pudo abrir el log en %s: %s", LOG_FILE, _exc)
+
+STATE_TIMEOUT = 5.0     # máximo por fuente de estado en cada sondeo
+
+# Pools de hilos separados: una descarga lenta (iconos sin internet) o una
+# acción colgada no puede dejar sin hilos a los botones ni al estado en vivo.
+ACTION_POOL = ThreadPoolExecutor(16, thread_name_prefix="action")
+STATE_POOL = ThreadPoolExecutor(8, thread_name_prefix="state")
+IO_POOL = ThreadPoolExecutor(4, thread_name_prefix="io")
+
+
+def in_pool(pool: ThreadPoolExecutor, fn, *args):
+    """Como asyncio.to_thread, pero en el pool indicado."""
+    return asyncio.get_running_loop().run_in_executor(pool, fn, *args)
+MAX_BACKUPS = 30
 
 PORT = int(os.environ.get("MINIDECK_PORT", "8765"))
 HOST = os.environ.get("MINIDECK_HOST", "0.0.0.0")
@@ -82,11 +122,54 @@ def validate_config(cfg) -> None:
             raise ValueError(f"'buttons' de la página '{p['id']}' debe ser una lista")
 
 
-def save_config(cfg: dict) -> None:
+def _backup_current() -> None:
+    """Guarda una copia del deck.json actual antes de sobrescribirlo."""
+    try:
+        current = CONFIG_PATH.read_text(encoding="utf-8")
+    except OSError:
+        return
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    existing = list_backups()
+    if existing and (BACKUP_DIR / existing[0]).read_text(encoding="utf-8") == current:
+        return  # nada cambió desde la última copia
+    ns = time.time_ns()   # nombre ordenable incluso con varios guardados por segundo
+    stamp = time.strftime("deck-%Y%m%d-%H%M%S", time.localtime(ns // 10**9))
+    name = f"{stamp}-{ns % 10**9:09d}.json"
+    (BACKUP_DIR / name).write_text(current, encoding="utf-8")
+    for old in list_backups()[MAX_BACKUPS:]:
+        (BACKUP_DIR / old).unlink(missing_ok=True)
+
+
+def list_backups() -> list[str]:
+    """Copias de seguridad, de la más reciente a la más antigua."""
+    if not BACKUP_DIR.is_dir():
+        return []
+    return sorted((p.name for p in BACKUP_DIR.glob("deck-*.json")), reverse=True)
+
+
+def restore_backup(name: str | None = None) -> dict:
+    """Restaura una copia (por defecto la última) y la consume: deshacer
+    varias veces va retrocediendo en el historial."""
+    names = list_backups()
+    if not names:
+        raise ValueError("No hay cambios que deshacer")
+    name = name or names[0]
+    if name not in names:
+        raise ValueError("Copia no encontrada")
+    cfg = json.loads((BACKUP_DIR / name).read_text(encoding="utf-8"))
+    save_config(cfg, backup=False)
+    (BACKUP_DIR / name).unlink(missing_ok=True)
+    return cfg
+
+
+def save_config(cfg: dict, backup: bool = True) -> None:
     """Escritura atómica: primero a un temporal, luego reemplazo. Evita
     archivos corruptos a medias y reduce choques con sincronizadores
-    de archivos (OneDrive, Dropbox) que bloquean el archivo original."""
+    de archivos (OneDrive, Dropbox) que bloquean el archivo original.
+    Antes guarda una copia del deck anterior (para deshacer)."""
     validate_config(cfg)
+    if backup:
+        _backup_current()
     tmp = CONFIG_PATH.with_suffix(".json.tmp")
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
@@ -139,7 +222,8 @@ async def collect_state(errors: dict | None = None) -> dict:
     Las fuentes se consultan en paralelo: una lenta no frena a las demás."""
     names = [n for n in _state_sources() if n in REGISTRY]
     results = await asyncio.gather(
-        *(asyncio.to_thread(REGISTRY[n], {}) for n in names),
+        *(asyncio.wait_for(in_pool(STATE_POOL, REGISTRY[n], {}), STATE_TIMEOUT)
+          for n in names),
         return_exceptions=True)
     snap = {}
     for name, result in zip(names, results, strict=True):
@@ -242,13 +326,23 @@ async def run_action(action: str, params: dict) -> dict:
         return {"ok": False, "message": f"Acción desconocida: '{action}'"}
     if not isinstance(params, dict):
         return {"ok": False, "message": "params debe ser un objeto"}
+    params = dict(params)
+    try:
+        validate_params(action, params)
+    except ValueError as exc:
+        return {"ok": False, "message": f"{action}: {exc}"}
+    timeout = (META.get(action) or {}).get("timeout", 30.0)
     try:
         # Las acciones son síncronas y potencialmente bloqueantes:
         # se ejecutan en un hilo para no congelar el servidor.
-        result = await asyncio.to_thread(fn, params)
+        result = await asyncio.wait_for(in_pool(ACTION_POOL, fn, params), timeout)
         if result is None:
             result = {}
         return {"ok": True, **result}
+    except asyncio.TimeoutError:
+        # El hilo no se puede matar, pero el móvil deja de esperar.
+        log.warning("La acción '%s' superó %.0fs", action, timeout)
+        return {"ok": False, "message": f"'{action}' tardó más de {timeout:.0f}s"}
     except Exception as exc:  # noqa: BLE001
         log.exception("Error ejecutando '%s'", action)
         return {"ok": False, "message": f"{type(exc).__name__}: {exc}"}
@@ -293,7 +387,12 @@ async def websocket_endpoint(ws: WebSocket):
                                         "buttonId": msg.get("buttonId"),
                                         "message": "Botón no encontrado"})
                     continue
-                result = await run_action(btn.get("action", ""), btn.get("params") or {})
+                # pulsación larga → segunda acción del botón, si la tiene
+                if msg.get("long") and btn.get("longAction"):
+                    act, prm = btn["longAction"], btn.get("longParams") or {}
+                else:
+                    act, prm = btn.get("action", ""), btn.get("params") or {}
+                result = await run_action(act, prm)
                 await ws.send_json({"type": "result",
                                     "buttonId": btn["id"], **result})
                 # Si la acción devolvió estado (ej. volumen), se difunde a todos.
@@ -321,6 +420,16 @@ async def websocket_endpoint(ws: WebSocket):
                     log.warning("NO se pudo guardar deck.json: %s", exc)
                     await ws.send_json({"type": "result", "ok": False,
                                         "message": f"No se pudo guardar: {exc}"})
+
+            elif mtype == "undo":
+                try:
+                    await in_pool(IO_POOL, restore_backup)
+                    await ws.send_json({"type": "result", "ok": True,
+                                        "message": "Cambio deshecho ↶"})
+                    await manager.broadcast({"type": "config", "data": load_config()})
+                except Exception as exc:  # noqa: BLE001
+                    await ws.send_json({"type": "result", "ok": False,
+                                        "message": str(exc)})
 
             elif mtype == "ping":
                 await ws.send_json({"type": "pong"})
@@ -356,6 +465,39 @@ async def get_config():
 async def list_actions():
     """Lista de acciones disponibles (la usa el editor)."""
     return JSONResponse(sorted(REGISTRY.keys()))
+
+
+@app.get("/api/actions/schema")
+async def actions_schema():
+    """Qué hace cada acción y qué params espera (el editor rellena plantillas)."""
+    return JSONResponse(describe_actions())
+
+
+@app.get("/api/backups")
+async def api_backups():
+    return JSONResponse(list_backups())
+
+
+@app.post("/api/backups/restore")
+async def api_backups_restore(req: Request):
+    body = await req.json()
+    try:
+        cfg = await in_pool(IO_POOL, restore_backup, body.get("name"))
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+    await manager.broadcast({"type": "config", "data": cfg})
+    return JSONResponse({"ok": True})
+
+
+@app.get("/api/logs")
+async def api_logs(lines: int = 200):
+    """Últimas líneas del log (diagnóstico desde el móvil o el panel)."""
+    lines = max(1, min(lines, 2000))
+    try:
+        text = LOG_FILE.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        text = ""
+    return Response("\n".join(text.splitlines()[-lines:]), media_type="text/plain")
 
 
 @app.get("/api/state")
@@ -439,7 +581,7 @@ async def pip_install(req: Request):
         return proc.returncode, (proc.stdout + proc.stderr)[-4000:]
 
     try:
-        code, out = await asyncio.to_thread(run)
+        code, out = await in_pool(IO_POOL, run)
     except Exception as exc:  # noqa: BLE001
         return JSONResponse({"ok": False, "output": str(exc)})
     log.info("pip install %s → %s", pkg, "ok" if code == 0 else "error")
@@ -525,6 +667,19 @@ No compartas este QR: da control total sobre este equipo.</div>
 </body></html>"""
     return Response(content=page, media_type="text/html",
                     headers={"Cache-Control": "no-store"})
+
+
+@app.get("/iconify/{pack}/{name}.svg")
+async def iconify(pack: str, name: str, color: str = ""):
+    """Icono con caché local (ver icons.py). Público: no contiene datos."""
+    bad_color = color and not icons.COLOR_RE.match(color)
+    if not icons.NAME_RE.match(pack) or not icons.NAME_RE.match(name) or bad_color:
+        return Response(status_code=400)
+    svg = await in_pool(IO_POOL, icons.get_svg, pack, name)
+    if svg is None:
+        return Response(status_code=404, headers={"Cache-Control": "no-store"})
+    return Response(icons.colorize(svg, color), media_type="image/svg+xml",
+                    headers={"Cache-Control": "public, max-age=604800"})
 
 
 @app.get("/manifest.webmanifest")

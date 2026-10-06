@@ -16,7 +16,7 @@ if sys.platform != "darwin":
     raise ImportError("launch_mac solo aplica a macOS")
 
 
-@action("launch")
+@action("launch", schema={"path": {"type": "str"}, "app": {"type": "str"}, "args": {"type": "list"}, "$oneOf": [["path", "app"]]})
 def launch(params: dict):
     """Abre una app, archivo o carpeta.
     params: {"app": "Visual Studio Code"}   ← por nombre de app, o
@@ -41,7 +41,7 @@ def launch(params: dict):
     raise ValueError("Falta 'app' o 'path'")
 
 
-@action("command")
+@action("command", schema={"cmd": {"type": "str", "required": True}, "cwd": {"type": "str"}, "terminal": {"type": "bool"}})
 def command(params: dict):
     """Ejecuta un comando de terminal.
     params: {"cmd": "git pull", "cwd": "~/proyecto", "terminal": true}

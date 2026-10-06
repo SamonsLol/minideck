@@ -1,0 +1,12 @@
+{
+  "name": "Home Assistant",
+  "version": "1.0.0",
+  "author": "Samons",
+  "description": "Llama a servicios de Home Assistant (luces, escenas, interruptores…) y muestra el estado de tus entidades.",
+  "requires": [],
+  "settings": {
+    "url": "http://homeassistant.local:8123",
+    "token": "",
+    "entities": []
+  }
+}

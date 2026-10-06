@@ -71,6 +71,21 @@ def hello_say(params: dict):
     return {"message": f"{greeting} {params.get('name', '')}"}
 ```
 
+### Validar parámetros y limitar el tiempo
+
+```python
+@action("hello_say",
+        schema={"name": {"type": "str", "required": True},
+                "times": {"type": "int", "min": 1, "max": 10}},
+        timeout=10)
+def hello_say(params: dict):
+    ...
+```
+
+- `schema` valida `params` **antes** de ejecutar: si falta un parámetro obligatorio o tiene un tipo o rango incorrecto, el móvil recibe un mensaje claro y tu función no se llama. Tipos: `str`, `int`, `float`, `bool`, `list`, `dict`. Reglas: `required`, `min`, `max`, `choices`. Con `"$oneOf": [["path", "app"]]` se exige al menos uno de varios. Los números escritos como texto (`"5"`) se convierten solos.
+- `timeout` (segundos, 30 por defecto): si la acción tarda más, el móvil recibe un error en vez de quedarse esperando.
+- El editor del móvil usa el esquema (y el ejemplo `params: {...}` del docstring) para rellenar una plantilla al elegir tu acción, y muestra la primera línea del docstring como ayuda.
+
 Reglas:
 
 - Recibe `params` (lo que el botón tenga en `"params"` en `deck.json`).
@@ -94,7 +109,18 @@ def hello_get(params: dict):
     return {"state": {"hello": {"count": 42}}}
 ```
 
-Con `state=True`, MiniDeck la consulta **cada segundo** y envía los cambios al móvil. Debe ser rápida: si algo es costoso (APIs web, subprocesos), cachea el resultado y refréscalo cada N segundos, como hace [`server/plugins/indicators/plugin.py`](../server/plugins/indicators/plugin.py).
+Con `state=True`, MiniDeck la consulta **cada segundo** y envía los cambios al móvil (máximo 5 s por consulta: si tarda más, se ignora esa vuelta). Debe ser rápida: si algo es costoso (APIs web, subprocesos), cachea el resultado y refréscalo cada N segundos, como hace [`server/plugins/indicators/plugin.py`](../server/plugins/indicators/plugin.py).
+
+### Botones con estado
+
+Cualquier botón del deck puede reaccionar a tu estado sin escribir JavaScript:
+
+```json
+{ "id": "b2", "label": "Contador", "icon": "lucide:hash", "action": "hello_say",
+  "when": { "key": "hello.count", "equals": 3, "color": "#4ade80", "label": "¡Tres!" } }
+```
+
+`key` es la ruta dentro del estado (`hello.count`). Sin `equals`, basta con que el valor sea verdadero (y distinto de `"off"`/`"unavailable"`).
 
 ## Ajustes
 

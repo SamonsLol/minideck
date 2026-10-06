@@ -56,9 +56,34 @@ _ID_RE = re.compile(r"^[a-z0-9][a-z0-9_\-]{0,63}$")
 FRONTEND_FILES = ("widget.css", "widget.js")
 
 
-def action(name: str, state: bool = False):
+# Metadatos por acción: descripción, ejemplo de params, esquema y timeout.
+META: dict[str, dict] = {}
+DEFAULT_TIMEOUT = 30.0   # segundos; una acción colgada no bloquea al cliente
+
+_TYPES = {"str": str, "int": int, "float": (int, float), "bool": bool,
+          "list": list, "dict": dict}
+
+
+def _doc_info(fn) -> tuple[str, str]:
+    """Primera línea del docstring y el ejemplo "params: {...}" si lo hay."""
+    doc = (fn.__doc__ or "").strip()
+    summary = doc.splitlines()[0].strip() if doc else ""
+    m = re.search(r"params:\s*(\{.*?\}|\{\})(?:\s|$)", doc, re.S)
+    return summary, (m.group(1).strip() if m else "")
+
+
+def action(name: str, state: bool = False, schema: dict | None = None,
+           timeout: float | None = None):
     """Decorador para registrar una acción por nombre.
-    Con state=True, la acción se sondea cada segundo como fuente de estado."""
+
+    state=True   → se sondea cada segundo como fuente de estado.
+    schema       → validación de params antes de ejecutar, p. ej.
+                   {"level": {"type": "int", "min": 0, "max": 100},
+                    "keys":  {"type": "str", "required": True},
+                    "mode":  {"type": "str", "choices": ["a", "b"]},
+                    "$oneOf": [["path", "app"]]}   # al menos uno de ellos
+    timeout      → segundos máximos (por defecto DEFAULT_TIMEOUT).
+    """
     def deco(fn):
         prev = OWNERS.get(name)
         if prev and prev != _current_owner and _current_owner != "core":
@@ -66,10 +91,51 @@ def action(name: str, state: bool = False):
                         _current_owner, name, prev)
         REGISTRY[name] = fn
         OWNERS[name] = _current_owner
+        summary, example = _doc_info(fn)
+        META[name] = {"doc": summary, "example": example, "schema": schema or {},
+                      "timeout": timeout or DEFAULT_TIMEOUT, "state": state}
         if state and name not in STATE_SOURCES:
             STATE_SOURCES.append(name)
         return fn
     return deco
+
+
+def validate_params(name: str, params: dict) -> None:
+    """Comprueba params contra el esquema de la acción. Lanza ValueError con
+    un mensaje claro (se muestra tal cual en el móvil)."""
+    schema = (META.get(name) or {}).get("schema") or {}
+    for group in schema.get("$oneOf", []):
+        if not any(params.get(k) not in (None, "") for k in group):
+            raise ValueError(f"Falta uno de: {', '.join(group)}")
+    for key, rule in schema.items():
+        if key.startswith("$"):
+            continue
+        val = params.get(key)
+        if val is None or val == "":
+            if rule.get("required"):
+                raise ValueError(f"Falta el parámetro '{key}'")
+            continue
+        typ = rule.get("type")
+        if typ in ("int", "float") and isinstance(val, str):
+            try:  # "50" desde un formulario → 50
+                val = int(val) if typ == "int" else float(val)
+                params[key] = val
+            except ValueError:
+                raise ValueError(f"'{key}' debe ser un número") from None
+        if typ and not isinstance(val, _TYPES[typ]) or (typ in ("int", "float")
+                                                         and isinstance(val, bool)):
+            raise ValueError(f"'{key}' debe ser de tipo {typ}")
+        if "min" in rule and val < rule["min"] or "max" in rule and val > rule["max"]:
+            raise ValueError(f"'{key}' debe estar entre {rule.get('min')} y {rule.get('max')}")
+        if "choices" in rule and val not in rule["choices"]:
+            raise ValueError(f"'{key}' debe ser uno de: {', '.join(map(str, rule['choices']))}")
+
+
+def describe_actions() -> dict:
+    """Para el editor: qué hace cada acción y qué parámetros espera."""
+    return {n: {"doc": m["doc"], "example": m["example"], "schema": m["schema"],
+                "owner": OWNERS.get(n, "core")}
+            for n, m in sorted(META.items()) if not m["state"]}
 
 
 # --------------------------------------------------------------- ajustes ---

@@ -34,7 +34,7 @@ def _tok(t: str) -> str:
     return _MOD.get(t, _KEY.get(t, t))
 
 
-@action("hotkey")
+@action("hotkey", schema={"keys": {"type": "str", "required": True}})
 def hotkey(params: dict):
     """Envía una combinación de teclas. params: {"keys": "cmd+shift+4"}
     Alias: win/cmd→⌘, alt/option→⌥, ctrl, shift. También teclas sueltas."""
@@ -47,7 +47,7 @@ def hotkey(params: dict):
     return {"message": f"Atajo: {keys}"}
 
 
-@action("type_text")
+@action("type_text", schema={"text": {"type": "str", "required": True}})
 def type_text(params: dict):
     """Escribe texto como si lo teclearas. params: {"text": "hola mundo"}"""
     text = params.get("text", "")

@@ -39,7 +39,7 @@ def lock(params: dict):
     return {"message": "Sesión bloqueada"}
 
 
-@action("power")
+@action("power", schema={"mode": {"type": "str", "choices": ["shutdown", "restart", "sleep", "cancel"]}, "delay_s": {"type": "int", "min": 0}})
 def power(params: dict):
     """Apaga, reinicia o suspende el equipo.
     params: {"mode": "shutdown" | "restart" | "sleep" | "cancel", "delay_s": 0}
@@ -86,7 +86,7 @@ def power(params: dict):
     return {"message": f"{mode}"}
 
 
-@action("screenshot")
+@action("screenshot", schema={"mode": {"type": "str", "choices": ["region", "window", "full", "interactive"]}, "clipboard": {"type": "bool"}})
 def screenshot(params: dict):
     """Captura de pantalla.
     params: {"mode": "region" | "window" | "full", "clipboard": true}
@@ -132,7 +132,7 @@ def show_desktop(params: dict):
     raise RuntimeError("Mostrar escritorio no soportado en este sistema")
 
 
-@action("kill_process")
+@action("kill_process", schema={"name": {"type": "str", "required": True}})
 def kill_process(params: dict):
     """Cierra un proceso por nombre.
     params: {"name": "Safari"}  (en Windows: "notepad.exe")

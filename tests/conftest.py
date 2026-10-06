@@ -16,6 +16,8 @@ sys.path.insert(0, str(SERVER))
 _TMP = Path(tempfile.mkdtemp(prefix="minideck-test-"))
 os.environ["MINIDECK_CONFIG_DIR"] = str(_TMP / "config")
 os.environ["MINIDECK_PLUGINS_DIR"] = str(_TMP / "plugins")
+os.environ["MINIDECK_LOG_DIR"] = str(_TMP / "logs")
+os.environ["MINIDECK_ICON_CACHE"] = str(_TMP / "icons")
 os.environ["MINIDECK_TOKEN"] = "test-token"
 os.environ.pop("MINIDECK_NO_AUTH", None)
 

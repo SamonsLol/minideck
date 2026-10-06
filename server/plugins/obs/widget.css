@@ -1,0 +1,92 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
+/* Widget OBS Studio: cabecera (conexión, escena, REC, LIVE) + fila de escenas. */
+.obs-panel {
+  --led: #ef4444;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.obs-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.obs-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+}
+.obs-off .obs-dot { background: var(--muted); box-shadow: none; }
+.obs-scene {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 14px;
+}
+.obs-off .obs-scene { color: var(--muted); font-weight: 500; }
+.obs-btn,
+.obs-scene-btn {
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) / 2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.obs-btn {
+  flex: none;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.obs-btn.obs-on {
+  color: #fff;
+  background: var(--err);
+  border-color: var(--err);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--err) 55%, transparent);
+}
+.obs-rec.obs-on.obs-paused { background: transparent; color: var(--err); }
+.obs-off .obs-btn { opacity: 0.45; }
+.obs-scenes {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.obs-scenes:empty { display: none; }
+.obs-scenes::-webkit-scrollbar { display: none; }
+.obs-scene-btn {
+  flex: none;
+  max-width: 50%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.obs-scene-btn.obs-on {
+  border-color: var(--led);
+  background: color-mix(in srgb, var(--led) 22%, transparent);
+}
+.obs-btn:active,
+.obs-scene-btn:active { transform: scale(0.96); }

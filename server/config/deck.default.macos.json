@@ -1,0 +1,905 @@
+{
+  "name": "MiniDeck",
+  "grid": {
+    "columns": 4,
+    "gap": 16
+  },
+  "nowplaying": {
+    "offset": 0.3
+  },
+  "profiles": {
+    "Code": "desarrollo",
+    "Visual Studio Code": "desarrollo",
+    "Terminal": "desarrollo",
+    "iTerm2": "desarrollo",
+    "Postman": "desarrollo",
+    "Xcode": "desarrollo",
+    "Vivaldi": "web",
+    "Google Chrome": "web",
+    "Safari": "web",
+    "WhatsApp": "comunicacion",
+    "Discord": "comunicacion",
+    "Slack": "comunicacion",
+    "Telegram": "comunicacion",
+    "Claude": "ia",
+    "Music": "multimedia",
+    "Spotify": "multimedia"
+  },
+  "pages": [
+    {
+      "id": "principal",
+      "name": "Principal",
+      "buttons": [
+        {
+          "id": "np",
+          "label": "",
+          "icon": "",
+          "color": "#25b3fa",
+          "type": "nowplaying",
+          "w": 2,
+          "h": 3
+        },
+        {
+          "id": "btn_mute",
+          "label": "Silenciar",
+          "icon": "lucide:volume-x",
+          "color": "#f87171",
+          "action": "volume_mute",
+          "params": {}
+        },
+        {
+          "id": "btn_code",
+          "label": "VS Code",
+          "icon": "simple-icons:visualstudiocode",
+          "color": "#25b3fa",
+          "action": "launch",
+          "params": {
+            "app": "Visual Studio Code"
+          }
+        },
+        {
+          "id": "btn_terminal",
+          "label": "Terminal",
+          "icon": "lucide:terminal",
+          "color": "#34d399",
+          "action": "launch",
+          "params": {
+            "app": "Terminal"
+          }
+        },
+        {
+          "id": "btn_vivaldi",
+          "label": "Vivaldi",
+          "icon": "simple-icons:vivaldi",
+          "color": "#ef4444",
+          "action": "launch",
+          "params": {
+            "app": "Vivaldi"
+          }
+        },
+        {
+          "id": "sld_volume",
+          "label": "Volumen",
+          "icon": "lucide:volume-2",
+          "color": "#60a5fa",
+          "type": "mixer",
+          "w": 2
+        }
+      ]
+    },
+    {
+      "id": "multimedia",
+      "name": "Multimedia",
+      "buttons": [
+        {
+          "id": "mm_prev",
+          "label": "Anterior",
+          "icon": "lucide:skip-back",
+          "color": "#60a5fa",
+          "action": "now_playing",
+          "params": {
+            "cmd": "previous"
+          }
+        },
+        {
+          "id": "mm_play",
+          "label": "Play/Pausa",
+          "icon": "lucide:play",
+          "color": "#34d399",
+          "action": "now_playing",
+          "params": {
+            "cmd": "play_pause"
+          }
+        },
+        {
+          "id": "mm_next",
+          "label": "Siguiente",
+          "icon": "lucide:skip-forward",
+          "color": "#60a5fa",
+          "action": "now_playing",
+          "params": {
+            "cmd": "next"
+          }
+        },
+        {
+          "id": "mm_mute",
+          "label": "Silenciar",
+          "icon": "lucide:volume-x",
+          "color": "#f87171",
+          "action": "volume_mute",
+          "params": {}
+        },
+        {
+          "id": "mm_voldown",
+          "label": "Vol -",
+          "icon": "lucide:volume-1",
+          "color": "#a78bfa",
+          "action": "volume_change",
+          "params": {
+            "delta": -5
+          }
+        },
+        {
+          "id": "mm_volup",
+          "label": "Vol +",
+          "icon": "lucide:volume-2",
+          "color": "#a78bfa",
+          "action": "volume_change",
+          "params": {
+            "delta": 5
+          }
+        },
+        {
+          "id": "mm_spotify",
+          "label": "Spotify",
+          "icon": "simple-icons:spotify",
+          "color": "#22c55e",
+          "action": "website",
+          "params": {
+            "url": "https://open.spotify.com"
+          }
+        },
+        {
+          "id": "mm_ytmusic",
+          "label": "YT Music",
+          "icon": "simple-icons:youtubemusic",
+          "color": "#ef4444",
+          "action": "website",
+          "params": {
+            "url": "https://music.youtube.com"
+          }
+        },
+        {
+          "id": "mm_out",
+          "label": "Salida",
+          "icon": "lucide:speaker",
+          "color": "#60a5fa",
+          "action": "audio_output",
+          "params": {}
+        },
+        {
+          "id": "mm_in",
+          "label": "Micrófono",
+          "icon": "lucide:mic",
+          "color": "#f472b6",
+          "action": "audio_input",
+          "params": {}
+        }
+      ]
+    },
+    {
+      "id": "capturas",
+      "name": "Capturas",
+      "buttons": [
+        {
+          "id": "cap_region",
+          "label": "Región",
+          "icon": "lucide:scan",
+          "color": "#34d399",
+          "action": "screenshot",
+          "params": {
+            "mode": "region"
+          }
+        },
+        {
+          "id": "cap_window",
+          "label": "Ventana",
+          "icon": "lucide:app-window",
+          "color": "#60a5fa",
+          "action": "screenshot",
+          "params": {
+            "mode": "window"
+          }
+        },
+        {
+          "id": "cap_full",
+          "label": "Completa",
+          "icon": "lucide:monitor",
+          "color": "#a78bfa",
+          "action": "screenshot",
+          "params": {
+            "mode": "full",
+            "clipboard": false
+          }
+        },
+        {
+          "id": "cap_ocr",
+          "label": "OCR",
+          "icon": "lucide:scan-text",
+          "color": "#fbbf24",
+          "action": "ocr_capture",
+          "params": {}
+        },
+        {
+          "id": "cap_pixel",
+          "label": "Color píxel",
+          "icon": "lucide:pipette",
+          "color": "#ef4444",
+          "action": "pixel_color",
+          "params": {}
+        }
+      ]
+    },
+    {
+      "id": "desarrollo",
+      "name": "Desarrollo",
+      "buttons": [
+        {
+          "id": "dev_code",
+          "label": "VS Code",
+          "icon": "simple-icons:visualstudiocode",
+          "color": "#25b3fa",
+          "action": "launch",
+          "params": {
+            "app": "Visual Studio Code"
+          }
+        },
+        {
+          "id": "dev_terminal",
+          "label": "Terminal",
+          "icon": "lucide:terminal",
+          "color": "#34d399",
+          "action": "launch",
+          "params": {
+            "app": "Terminal"
+          }
+        },
+        {
+          "id": "dev_postman",
+          "label": "Postman",
+          "icon": "simple-icons:postman",
+          "color": "#f97316",
+          "action": "launch",
+          "params": {
+            "app": "Postman"
+          }
+        },
+        {
+          "id": "dev_github",
+          "label": "GitHub",
+          "icon": "simple-icons:github",
+          "color": "#e8ecf2",
+          "action": "website",
+          "params": {
+            "url": "https://github.com"
+          }
+        },
+        {
+          "id": "dev_proyecto",
+          "label": "Proyecto",
+          "icon": "lucide:folder-code",
+          "color": "#fbbf24",
+          "action": "launch",
+          "params": {
+            "path": "~/Documents/minideck"
+          }
+        },
+        {
+          "id": "dev_pull",
+          "label": "git pull",
+          "icon": "simple-icons:git",
+          "color": "#f97316",
+          "action": "command",
+          "params": {
+            "cmd": "git pull",
+            "cwd": "~/Documents/minideck"
+          }
+        },
+        {
+          "id": "w_rutnl5",
+          "label": "MiniDeck",
+          "icon": "lucide:github",
+          "color": "#60a5fa",
+          "action": "website",
+          "params": {
+            "url": "https://github.com/SamonsLol/minideck"
+          }
+        },
+        {
+          "id": "dev_push",
+          "label": "git push",
+          "icon": "simple-icons:git",
+          "color": "#ef4444",
+          "action": "command",
+          "params": {
+            "cmd": "git push",
+            "cwd": "~/Documents/minideck"
+          }
+        },
+        {
+          "id": "dev_npm",
+          "label": "npm start",
+          "icon": "simple-icons:npm",
+          "color": "#ef4444",
+          "action": "command",
+          "params": {
+            "cmd": "npm start",
+            "cwd": "~/Documents/minideck"
+          }
+        },
+        {
+          "id": "dev_trabajo",
+          "label": "Modo Trabajo",
+          "icon": "lucide:rocket",
+          "color": "#a78bfa",
+          "action": "macro",
+          "params": {
+            "steps": [
+              {
+                "action": "launch",
+                "params": {
+                  "app": "Visual Studio Code"
+                }
+              },
+              {
+                "delay_ms": 400
+              },
+              {
+                "action": "launch",
+                "params": {
+                  "app": "Terminal"
+                }
+              },
+              {
+                "delay_ms": 400
+              },
+              {
+                "action": "launch",
+                "params": {
+                  "app": "Vivaldi"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "name": "Web",
+      "buttons": [
+        {
+          "id": "web_gmail",
+          "label": "Gmail",
+          "icon": "simple-icons:gmail",
+          "color": "#ef4444",
+          "action": "website",
+          "params": {
+            "url": "https://mail.google.com"
+          }
+        },
+        {
+          "id": "web_cal",
+          "label": "Calendar",
+          "icon": "simple-icons:googlecalendar",
+          "color": "#3b82f6",
+          "action": "website",
+          "params": {
+            "url": "https://calendar.google.com"
+          }
+        },
+        {
+          "id": "web_drive",
+          "label": "Drive",
+          "icon": "simple-icons:googledrive",
+          "color": "#22c55e",
+          "action": "website",
+          "params": {
+            "url": "https://drive.google.com"
+          }
+        },
+        {
+          "id": "web_yt",
+          "label": "YouTube",
+          "icon": "simple-icons:youtube",
+          "color": "#ef4444",
+          "action": "website",
+          "params": {
+            "url": "https://youtube.com"
+          }
+        },
+        {
+          "id": "web_wa",
+          "label": "WhatsApp",
+          "icon": "simple-icons:whatsapp",
+          "color": "#22c55e",
+          "action": "launch",
+          "params": {
+            "app": "WhatsApp"
+          }
+        },
+        {
+          "id": "web_github",
+          "label": "GitHub",
+          "icon": "simple-icons:github",
+          "color": "#e8ecf2",
+          "action": "website",
+          "params": {
+            "url": "https://github.com"
+          }
+        },
+        {
+          "id": "web_linkedin",
+          "label": "LinkedIn",
+          "icon": "simple-icons:linkedin",
+          "color": "#3b82f6",
+          "action": "website",
+          "params": {
+            "url": "https://linkedin.com"
+          }
+        },
+        {
+          "id": "web_reddit",
+          "label": "Reddit",
+          "icon": "simple-icons:reddit",
+          "color": "#f97316",
+          "action": "website",
+          "params": {
+            "url": "https://reddit.com"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ia",
+      "name": "IA",
+      "buttons": [
+        {
+          "id": "ia_chatgpt",
+          "label": "ChatGPT",
+          "icon": "simple-icons:openai",
+          "color": "#22c55e",
+          "action": "website",
+          "params": {
+            "url": "https://chatgpt.com"
+          }
+        },
+        {
+          "id": "ia_claude",
+          "label": "Claude",
+          "icon": "simple-icons:anthropic",
+          "color": "#f97316",
+          "action": "launch",
+          "params": {
+            "app": "Claude"
+          }
+        },
+        {
+          "id": "ia_gemini",
+          "label": "Gemini",
+          "icon": "simple-icons:googlegemini",
+          "color": "#3b82f6",
+          "action": "website",
+          "params": {
+            "url": "https://gemini.google.com"
+          }
+        },
+        {
+          "id": "ia_perplexity",
+          "label": "Perplexity",
+          "icon": "simple-icons:perplexity",
+          "color": "#22d3ee",
+          "action": "website",
+          "params": {
+            "url": "https://perplexity.ai"
+          }
+        },
+        {
+          "id": "ia_copilot",
+          "label": "Copilot",
+          "icon": "simple-icons:githubcopilot",
+          "color": "#e8ecf2",
+          "action": "website",
+          "params": {
+            "url": "https://github.com/copilot"
+          }
+        },
+        {
+          "id": "ia_notebook",
+          "label": "NotebookLM",
+          "icon": "lucide:notebook-pen",
+          "color": "#a78bfa",
+          "action": "website",
+          "params": {
+            "url": "https://notebooklm.google.com"
+          }
+        }
+      ]
+    },
+    {
+      "id": "comunicacion",
+      "name": "Comunicación",
+      "buttons": [
+        {
+          "id": "dc_mic",
+          "label": "Micro",
+          "icon": "lucide:mic",
+          "color": "#4ade80",
+          "action": "discord_mute",
+          "params": {},
+          "when": {
+            "key": "discord.mute",
+            "icon": "lucide:mic-off",
+            "color": "#f87171",
+            "label": "Micro OFF"
+          }
+        },
+        {
+          "id": "dc_deaf",
+          "label": "Sordina",
+          "icon": "lucide:headphones",
+          "color": "#60a5fa",
+          "action": "discord_deafen",
+          "params": {},
+          "when": {
+            "key": "discord.deaf",
+            "icon": "lucide:headphone-off",
+            "color": "#f87171"
+          }
+        },
+        {
+          "id": "com_wa",
+          "label": "WhatsApp",
+          "icon": "simple-icons:whatsapp",
+          "color": "#22c55e",
+          "action": "launch",
+          "params": {
+            "app": "WhatsApp"
+          }
+        },
+        {
+          "id": "com_discord",
+          "label": "Discord",
+          "icon": "simple-icons:discord",
+          "color": "#818cf8",
+          "action": "website",
+          "params": {
+            "url": "https://discord.com/app"
+          }
+        },
+        {
+          "id": "com_slack",
+          "label": "Slack",
+          "icon": "simple-icons:slack",
+          "color": "#a78bfa",
+          "action": "website",
+          "params": {
+            "url": "https://app.slack.com"
+          }
+        },
+        {
+          "id": "com_zoom",
+          "label": "Zoom",
+          "icon": "simple-icons:zoom",
+          "color": "#3b82f6",
+          "action": "website",
+          "params": {
+            "url": "https://zoom.us/join"
+          }
+        },
+        {
+          "id": "com_meet",
+          "label": "Meet",
+          "icon": "simple-icons:googlemeet",
+          "color": "#22c55e",
+          "action": "website",
+          "params": {
+            "url": "https://meet.google.com"
+          }
+        },
+        {
+          "id": "com_tg",
+          "label": "Telegram",
+          "icon": "simple-icons:telegram",
+          "color": "#22d3ee",
+          "action": "website",
+          "params": {
+            "url": "https://web.telegram.org"
+          }
+        },
+        {
+          "id": "com_gmail",
+          "label": "Gmail",
+          "icon": "simple-icons:gmail",
+          "color": "#ef4444",
+          "action": "website",
+          "params": {
+            "url": "https://mail.google.com"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream",
+      "name": "Stream",
+      "buttons": [
+        {
+          "id": "obs_panel",
+          "type": "obs",
+          "label": "OBS",
+          "color": "#a78bfa",
+          "w": "full",
+          "h": 1
+        },
+        {
+          "id": "obs_rec",
+          "label": "Grabar",
+          "icon": "lucide:circle",
+          "color": "#8a93a3",
+          "action": "obs_record_toggle",
+          "params": {},
+          "when": {
+            "key": "obs.recording",
+            "icon": "lucide:circle-stop",
+            "color": "#f87171",
+            "label": "Grabando"
+          }
+        },
+        {
+          "id": "obs_live",
+          "label": "Directo",
+          "icon": "lucide:radio",
+          "color": "#8a93a3",
+          "action": "obs_stream_toggle",
+          "params": {},
+          "when": {
+            "key": "obs.streaming",
+            "icon": "lucide:radio-tower",
+            "color": "#f87171",
+            "label": "EN VIVO"
+          }
+        },
+        {
+          "id": "obs_mic",
+          "label": "Mic OBS",
+          "icon": "lucide:mic",
+          "color": "#60a5fa",
+          "action": "obs_mute_toggle",
+          "params": {
+            "input": "Mic/Aux"
+          }
+        },
+        {
+          "id": "obs_replay",
+          "label": "Replay",
+          "icon": "lucide:history",
+          "color": "#fbbf24",
+          "action": "obs_replay_save",
+          "params": {}
+        },
+        {
+          "id": "dc_mic",
+          "label": "Micro",
+          "icon": "lucide:mic",
+          "color": "#4ade80",
+          "action": "discord_mute",
+          "params": {},
+          "when": {
+            "key": "discord.mute",
+            "icon": "lucide:mic-off",
+            "color": "#f87171",
+            "label": "Micro OFF"
+          }
+        },
+        {
+          "id": "dc_deaf",
+          "label": "Sordina",
+          "icon": "lucide:headphones",
+          "color": "#60a5fa",
+          "action": "discord_deafen",
+          "params": {},
+          "when": {
+            "key": "discord.deaf",
+            "icon": "lucide:headphone-off",
+            "color": "#f87171"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apps",
+      "name": "Apps",
+      "buttons": [
+        {
+          "id": "app_finder",
+          "label": "Finder",
+          "icon": "lucide:folder",
+          "color": "#38bdf8",
+          "action": "launch",
+          "params": {
+            "app": "Finder"
+          }
+        },
+        {
+          "id": "app_safari",
+          "label": "Safari",
+          "icon": "simple-icons:safari",
+          "color": "#60a5fa",
+          "action": "launch",
+          "params": {
+            "app": "Safari"
+          }
+        },
+        {
+          "id": "app_appstore",
+          "label": "App Store",
+          "icon": "simple-icons:appstore",
+          "color": "#3b82f6",
+          "action": "launch",
+          "params": {
+            "app": "App Store"
+          }
+        },
+        {
+          "id": "app_xcode",
+          "label": "Xcode",
+          "icon": "simple-icons:xcode",
+          "color": "#38bdf8",
+          "action": "launch",
+          "params": {
+            "app": "Xcode"
+          }
+        },
+        {
+          "id": "w_b1uf92",
+          "label": "Chess",
+          "icon": "lucide:chess-knight",
+          "color": "#34d399",
+          "action": "website",
+          "params": {
+            "url": "https://chess.com"
+          }
+        },
+        {
+          "id": "app_quicktime",
+          "label": "QuickTime",
+          "icon": "simple-icons:quicktime",
+          "color": "#22d3ee",
+          "action": "launch",
+          "params": {
+            "app": "QuickTime Player"
+          }
+        },
+        {
+          "id": "app_obsidian",
+          "label": "Obsidian",
+          "icon": "simple-icons:obsidian",
+          "color": "#a78bfa",
+          "action": "launch",
+          "params": {
+            "app": "Obsidian"
+          }
+        },
+        {
+          "id": "app_rayon",
+          "label": "Rayon",
+          "icon": "lucide:server",
+          "color": "#818cf8",
+          "action": "launch",
+          "params": {
+            "app": "Rayon"
+          }
+        },
+        {
+          "id": "app_readspeed",
+          "label": "ReadSpeed",
+          "icon": "lucide:gauge",
+          "color": "#34d399",
+          "action": "launch",
+          "params": {
+            "app": "ReadSpeed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sistema",
+      "name": "Sistema",
+      "buttons": [
+        {
+          "id": "sys_clock",
+          "type": "clock",
+          "color": "#60a5fa",
+          "w": "full",
+          "h": 1,
+          "params": {}
+        },
+        {
+          "id": "sys_panel",
+          "type": "sysmon",
+          "color": "#34d399",
+          "w": "full",
+          "h": 1,
+          "params": {}
+        },
+        {
+          "id": "sys_ind",
+          "type": "indicators",
+          "color": "#22d3ee",
+          "w": "full",
+          "h": 1,
+          "params": {}
+        }
+      ]
+    },
+    {
+      "id": "mac",
+      "name": "Mac",
+      "buttons": [
+        {
+          "id": "btn_lock",
+          "label": "Bloquear",
+          "icon": "lucide:lock",
+          "color": "#a78bfa",
+          "action": "lock",
+          "params": {}
+        },
+        {
+          "id": "btn_sleep",
+          "label": "Suspender",
+          "icon": "lucide:moon",
+          "color": "#818cf8",
+          "action": "power",
+          "params": {
+            "mode": "sleep"
+          }
+        },
+        {
+          "id": "btn_capture",
+          "label": "Captura",
+          "icon": "lucide:scan",
+          "color": "#34d399",
+          "action": "screenshot",
+          "params": {
+            "mode": "region"
+          }
+        },
+        {
+          "id": "btn_desktop",
+          "label": "Escritorio",
+          "icon": "lucide:monitor",
+          "color": "#fbbf24",
+          "action": "show_desktop",
+          "params": {}
+        },
+        {
+          "id": "btn_spaces",
+          "label": "Escritorios",
+          "icon": "lucide:layout-grid",
+          "color": "#60a5fa",
+          "action": "mission_control",
+          "params": {}
+        },
+        {
+          "id": "btn_trash",
+          "label": "Papelera",
+          "icon": "lucide:trash-2",
+          "color": "#f87171",
+          "action": "empty_trash",
+          "params": {}
+        }
+      ]
+    }
+  ],
+  "customWidgets": {}
+}
