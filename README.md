@@ -1,26 +1,28 @@
 # MiniDeck
 
+**English** · [Español](README.es.md)
+
 [![CI](https://github.com/SamonsLol/minideck/actions/workflows/ci.yml/badge.svg)](https://github.com/SamonsLol/minideck/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
-Convierte tu móvil en un **Stream Deck** para tu PC o Mac. Sin app que instalar en el teléfono: es una PWA que abres en el navegador. El servidor es Python (FastAPI + WebSocket) y el frontend es HTML/CSS/JS puro, sin build.
+Turn your phone into a **Stream Deck** for your PC or Mac. There's no app to install on the phone: it's a PWA you open in the browser. The server is Python (FastAPI + WebSocket) and the frontend is plain HTML/CSS/JS with no build step.
 
-> **English:** MiniDeck turns your phone into a Stream Deck–style controller for your Windows/macOS/Linux computer. Python server + zero-build PWA, plugin system, licensed under AGPL-3.0-or-later. Docs are in Spanish; issues and PRs in English are welcome.
+Issues and PRs are welcome in English or Spanish.
 
-## Qué hace
+## Features
 
-- **Botones** para atajos de teclado, abrir apps/webs, comandos, macros, webhooks (n8n, Home Assistant…), apagar/bloquear, etc.
-- **Widgets en vivo**: volumen, mezclador por app (Windows), *Now Playing* con carátula, Discord (mute/sordina y quién habla), CPU/RAM, clima, Git, Docker…
-- **Editor visual** desde el propio móvil: páginas, iconos (Lucide), colores, arrastrar y soltar.
-- **Perfiles por app** (macOS): cambia de página según la app activa.
-- **Plugins** en Python + JS, y widgets personalizados desde el Panel de Control (`/panel.html`).
-- **Emparejamiento seguro** por QR: nadie más en tu red puede controlar tu equipo.
+- **Buttons** for keyboard shortcuts, opening apps and websites, shell commands, macros, webhooks (n8n, Home Assistant…), shutdown/lock, and more.
+- **Live widgets**: volume, per-app mixer (Windows), *Now Playing* with album art, Discord (mute/deafen and who's speaking), CPU/RAM, weather, Git, Docker…
+- **Visual editor** right on the phone: pages, icons (Lucide), colors, drag and drop.
+- **Per-app profiles** (macOS): switch pages automatically based on the active app.
+- **Plugins** in Python + JS, plus custom widgets built in the Control Panel (`/panel.html`).
+- **Secure QR pairing**: nobody else on your network can control your computer.
 
-## Inicio rápido
+## Quick start
 
-Requisitos: Python 3.10+ y el móvil en la **misma red WiFi** que el equipo.
+Requirements: Python 3.10+ and your phone on the **same Wi-Fi network** as the computer.
 
 ```bash
 git clone https://github.com/SamonsLol/minideck.git
@@ -33,7 +35,7 @@ cd server
 python main.py
 ```
 
-En la consola verás:
+The console shows something like this (the messages are in Spanish):
 
 ```
   MiniDeck 1.0.0 corriendo
@@ -42,40 +44,40 @@ En la consola verás:
   Desde el móvil:  http://192.168.1.50:8765  (código: …)
 ```
 
-1. En el equipo abre **http://localhost:8765/qr**.
-2. Escanea el QR con la cámara del móvil. Se abre MiniDeck ya **emparejado**.
-3. *Compartir → Añadir a pantalla de inicio* para usarlo a pantalla completa.
+1. On the computer, open **http://localhost:8765/qr**.
+2. Scan the QR code with your phone's camera. MiniDeck opens already **paired**.
+3. Use *Share → Add to Home Screen* to run it full screen.
 
-**Windows:** doble clic en `MiniDeck.bat` lo arranca sin consola y con icono en la bandeja (clic derecho → Mostrar QR / Salir). La primera vez, permite el acceso de Python a **redes privadas** en el Firewall.
+**Windows:** double-click `MiniDeck.bat` to start it with no console window and a tray icon (right-click → Show QR / Quit). The first time, allow Python access to **private networks** in Windows Firewall.
 
-**macOS:** ver [README_MAC.md](README_MAC.md) (permisos de Accesibilidad, app de barra de menú `.app`, HTTPS para Android).
+**macOS:** see [README_MAC.md](README_MAC.md) (in Spanish) for Accessibility permissions, the menu bar `.app`, and HTTPS for Android.
 
-## Seguridad
+## Security
 
-MiniDeck puede ejecutar comandos en tu equipo, así que:
+MiniDeck can run commands on your computer, so:
 
-- Todas las peticiones a `/api` y `/ws` exigen un **token de emparejamiento** (se genera solo la primera vez y se guarda en `auth_token`, en la carpeta de config).
-- El QR y el token solo se muestran **desde el propio equipo** (`localhost`).
-- **No compartas el QR ni el código.** Para revocar todos los dispositivos, borra el archivo `auth_token` y reinicia: se generará uno nuevo.
-- No expongas el puerto 8765 a Internet (nada de *port forwarding*). Si necesitas acceso remoto, usa una VPN como Tailscale o WireGuard.
+- Every request to `/api` and `/ws` requires a **pairing token**. It's generated on first run and stored in `auth_token` in the config folder.
+- The QR code and token are only shown **on the computer itself** (`localhost`).
+- **Don't share the QR code or the pairing code.** To revoke every paired device, delete `auth_token` and restart; a new one is generated.
+- Never expose port 8765 to the internet (no port forwarding). For remote access, use a VPN such as Tailscale or WireGuard.
 
-Más detalles y cómo reportar vulnerabilidades: [SECURITY.md](SECURITY.md).
+More details and how to report vulnerabilities: [SECURITY.md](SECURITY.md).
 
-## Configurar el deck
+## Configuring the deck
 
-El deck vive en `deck.json`:
+The deck lives in `deck.json`:
 
-| Modo | Ubicación |
+| Mode | Location |
 |---|---|
-| Desde el código (`python main.py`) | `server/config/deck.json` |
-| App empaquetada | Windows `%APPDATA%\MiniDeck\` · macOS `~/Library/Application Support/MiniDeck/` · Linux `~/.config/minideck/` |
+| From source (`python main.py`) | `server/config/deck.json` |
+| Packaged app | Windows `%APPDATA%\MiniDeck\` · macOS `~/Library/Application Support/MiniDeck/` · Linux `~/.config/minideck/` |
 
-La primera vez se crea a partir de `server/config/deck.default.json`. Lo más cómodo es editarlo desde el móvil con el botón ✎, pero también puedes editar el JSON a mano: al guardar, todos los clientes se actualizan solos.
+On first run it's created from `server/config/deck.default.json`. The easiest way to edit it is from the phone with the ✎ button, but you can also edit the JSON by hand: when you save, every connected client updates automatically.
 
 ```json
 {
-  "id": "btn_unico",
-  "label": "Mi botón",
+  "id": "unique_btn",
+  "label": "My button",
   "icon": "lucide:gamepad-2",
   "color": "#60a5fa",
   "action": "hotkey",
@@ -83,87 +85,87 @@ La primera vez se crea a partir de `server/config/deck.default.json`. Lo más c�
 }
 ```
 
-## Acciones incluidas
+## Built-in actions
 
-| Acción | Params | Plataformas |
+| Action | Params | Platforms |
 |---|---|---|
 | `hotkey` | `{"keys": "ctrl+shift+m"}` | Win, Mac |
-| `type_text` | `{"text": "hola"}` | Win, Mac |
-| `launch` | `{"path": "..."}` · Mac: `{"app": "Safari"}` | todas |
-| `command` | `{"cmd": "...", "shell": "powershell"}` | todas |
-| `website` | `{"url": "https://..."}` | todas |
-| `http_request` | `{"url", "method", "body", "headers"}` | todas |
+| `type_text` | `{"text": "hello"}` | Win, Mac |
+| `launch` | `{"path": "..."}` · Mac: `{"app": "Safari"}` | all |
+| `command` | `{"cmd": "...", "shell": "powershell"}` | all |
+| `website` | `{"url": "https://..."}` | all |
+| `http_request` | `{"url", "method", "body", "headers"}` | all |
 | `now_playing` | `{"cmd": "play_pause" \| "next" \| "previous" \| "seek", "position": 90}` | Win, Mac |
 | `volume_set` / `volume_change` / `volume_mute` | `{"level": 50}` / `{"delta": 5}` / `{}` | Win, Mac |
 | `mixer_set` / `mixer_mute` | `{"app": "chrome.exe", "level": 40}` | Win |
 | `discord_mute` / `discord_deafen` | `{}` | Win, Mac, Linux |
-| `lock` | `{}` | todas |
-| `power` | `{"mode": "shutdown" \| "restart" \| "sleep" \| "cancel"}` | todas |
-| `kill_process` | `{"name": "app.exe"}` | todas |
-| `mouse_click` / `mouse_move` | `{"x": 100, "y": 200}` | todas |
-| `macro` | `{"steps": [{"action": ..., "params": ...}, {"delay_ms": 500}]}` | todas |
-| `screenshot`, `show_desktop`, `shortcut`, `clipboard_copy`, `ocr_capture`, `audio_output`… | ver código | Mac |
+| `lock` | `{}` | all |
+| `power` | `{"mode": "shutdown" \| "restart" \| "sleep" \| "cancel"}` | all |
+| `kill_process` | `{"name": "app.exe"}` | all |
+| `mouse_click` / `mouse_move` | `{"x": 100, "y": 200}` | all |
+| `macro` | `{"steps": [{"action": ..., "params": ...}, {"delay_ms": 500}]}` | all |
+| `screenshot`, `show_desktop`, `shortcut`, `clipboard_copy`, `ocr_capture`, `audio_output`… | see source | Mac |
 
-La lista exacta de lo disponible en tu equipo: `GET /api/actions`.
+The exact list available on your machine: `GET /api/actions`.
 
-Discord requiere crear una app en el portal de desarrolladores: instrucciones al principio de [server/actions/discord_rpc.py](server/actions/discord_rpc.py) y plantilla en `server/config/discord.example.json`.
+Discord needs an app created in the Discord Developer Portal: see the instructions at the top of [server/actions/discord_rpc.py](server/actions/discord_rpc.py) and the template in `server/config/discord.example.json`.
 
 ## Plugins
 
-Añade acciones, datos en vivo y widgets sin tocar el código de MiniDeck:
+Add actions, live data, and widgets without touching MiniDeck's code:
 
 ```
-%APPDATA%\MiniDeck\plugins\mi_plugin\     (o ~/Library/Application Support/MiniDeck/plugins/…)
-├── plugin.json   ← nombre, versión, plataformas, dependencias, ajustes
-├── plugin.py     ← @action("mi_plugin_hacer")
-├── widget.js     ← MiniDeck.registerWidget("mi_plugin", {...})
+%APPDATA%\MiniDeck\plugins\my_plugin\     (or ~/Library/Application Support/MiniDeck/plugins/…)
+├── plugin.json   ← name, version, platforms, dependencies, settings
+├── plugin.py     ← @action("my_plugin_do")
+├── widget.js     ← MiniDeck.registerWidget("my_plugin", {...})
 └── widget.css
 ```
 
 ```python
 from actions import action
 
-@action("mi_plugin_hacer")
-def hacer(params: dict):
-    return {"message": "Listo"}
+@action("my_plugin_do")
+def do(params: dict):
+    return {"message": "Done"}
 ```
 
-Guía completa: **[docs/PLUGINS.md](docs/PLUGINS.md)** · Plantilla: [examples/plugins/hello](examples/plugins/hello) · Índice de la comunidad: [docs/PLUGIN_INDEX.md](docs/PLUGIN_INDEX.md)
+Full guide (in Spanish): **[docs/PLUGINS.md](docs/PLUGINS.md)** · Template: [examples/plugins/hello](examples/plugins/hello) · Community index: [docs/PLUGIN_INDEX.md](docs/PLUGIN_INDEX.md)
 
-## Opciones del servidor
+## Server options
 
-| Opción | Por defecto | Para qué |
+| Option | Default | Purpose |
 |---|---|---|
-| `--port` / `MINIDECK_PORT` | `8765` | Puerto |
-| `--host` / `MINIDECK_HOST` | `0.0.0.0` | Interfaz (usa `127.0.0.1` para solo local) |
-| `MINIDECK_TOKEN` | aleatorio | Fijar el token (p. ej. el mismo en varios equipos) |
-| `MINIDECK_CONFIG_DIR` | ver arriba | Carpeta de `deck.json`, token y `discord.json` |
-| `MINIDECK_PLUGINS_DIR` | `<datos>/plugins` | Carpeta de plugins de usuario |
-| `MINIDECK_NO_AUTH=1` | — | Desactiva el token. **No recomendado.** |
+| `--port` / `MINIDECK_PORT` | `8765` | Port |
+| `--host` / `MINIDECK_HOST` | `0.0.0.0` | Interface (use `127.0.0.1` for local only) |
+| `MINIDECK_TOKEN` | random | Fixed token (e.g. the same one on several machines) |
+| `MINIDECK_CONFIG_DIR` | see above | Folder for `deck.json`, the token, and `discord.json` |
+| `MINIDECK_PLUGINS_DIR` | `<data>/plugins` | User plugins folder |
+| `MINIDECK_NO_AUTH=1` | — | Disables the token. **Not recommended.** |
 
-## Estructura
+## Project layout
 
 ```
 minideck/
 ├── server/
-│   ├── main.py            # FastAPI + WebSocket + rutas
-│   ├── auth.py            # token de emparejamiento
-│   ├── paths.py           # rutas por sistema operativo
-│   ├── actions/           # acciones incluidas (una por módulo/plataforma)
-│   ├── plugins/           # plugins incluidos (sysmon, clock, indicators)
-│   ├── config/            # deck.default.json y plantillas
-│   ├── app_menubar.py     # app de barra de menú (macOS)
-│   └── run.ps1            # arranque con icono de bandeja (Windows)
-├── frontend/              # PWA (HTML/CSS/JS puro, sin build)
-├── examples/plugins/      # plantilla de plugin
-├── docs/                  # guía de plugins
-├── build/                 # empaquetado macOS (PyInstaller, DMG, certificados)
+│   ├── main.py            # FastAPI + WebSocket + routes
+│   ├── auth.py            # pairing token
+│   ├── paths.py           # per-OS paths
+│   ├── actions/           # built-in actions (one module per platform)
+│   ├── plugins/           # bundled plugins (sysmon, clock, indicators)
+│   ├── config/            # deck.default.json and templates
+│   ├── app_menubar.py     # menu bar app (macOS)
+│   └── run.ps1            # tray-icon launcher (Windows)
+├── frontend/              # PWA (plain HTML/CSS/JS, no build)
+├── examples/plugins/      # plugin template
+├── docs/                  # plugin guide
+├── build/                 # macOS packaging (PyInstaller, DMG, certificates)
 └── tests/
 ```
 
-## Contribuir
+## Contributing
 
-¡Bienvenido! Lee [CONTRIBUTING.md](CONTRIBUTING.md). Para desarrollo:
+Welcome aboard! Read [CONTRIBUTING.md](CONTRIBUTING.md). For development:
 
 ```bash
 pip install -r requirements-dev.txt
@@ -171,10 +173,10 @@ pytest
 ruff check server tests
 ```
 
-## Licencia
+## License
 
 Copyright © 2026 Samons
 
-MiniDeck es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la **GNU Affero General Public License** publicada por la Free Software Foundation, ya sea la versión 3 o (a tu elección) cualquier versión posterior (`AGPL-3.0-or-later`). Se distribuye SIN NINGUNA GARANTÍA. Texto completo en [LICENSE](LICENSE).
+MiniDeck is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version (`AGPL-3.0-or-later`). It is distributed WITHOUT ANY WARRANTY. Full text in [LICENSE](LICENSE).
 
-En resumen: puedes usarlo, modificarlo y compartirlo libremente, pero si distribuyes una versión modificada **o la ofreces a otras personas a través de la red**, debes publicar su código fuente bajo la misma licencia.
+In short: you're free to use, modify, and share it, but if you distribute a modified version **or make it available to others over a network**, you must publish its source code under the same license.

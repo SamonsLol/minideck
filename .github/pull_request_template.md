@@ -12,4 +12,4 @@
 
 - [ ] No incluye secretos, tokens ni datos personales (`deck.json`, `discord.json`…)
 - [ ] Si añade una ruta `/api`, pasa por la autenticación y tiene test
-- [ ] Documentación actualizada (README, docs/PLUGINS.md, CHANGELOG.md)
+- [ ] Documentación actualizada (README.md y README.es.md, docs/PLUGINS.md, CHANGELOG.md)
