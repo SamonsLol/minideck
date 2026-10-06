@@ -6,6 +6,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+<a href="https://www.buymeacoffee.com/samons" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="28" width="100"></a>
 
 Turn your phone into a **Stream Deck** for your PC or Mac. There's no app to install on the phone: it's a PWA you open in the browser. The server is Python (FastAPI + WebSocket) and the frontend is plain HTML/CSS/JS with no build step.
 
@@ -221,6 +222,10 @@ ruff check server tests examples packaging
 ```
 
 To publish a release: `git tag v1.1.0 && git push origin v1.1.0`. GitHub Actions builds the Windows `.zip`, the macOS `.dmg` and the Python package, and attaches them to the release.
+
+## Support
+
+MiniDeck is free and will stay free. If it saves you time, you can [buy me a coffee](https://www.buymeacoffee.com/samons) ☕
 
 ## License
 
