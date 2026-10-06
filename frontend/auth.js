@@ -34,6 +34,11 @@
 
   async function ensure() {
     if (read()) return read();
+    // ¿emparejado con cookie? (modo sin JS o QR abierto en el navegador)
+    try {
+      const r = await fetch("/api/info");
+      if (r.ok) return "cookie";
+    } catch { /* sin servidor: reintentará al reconectar */ }
     if (LOCAL) {
       try {
         const r = await fetch("/api/pair");

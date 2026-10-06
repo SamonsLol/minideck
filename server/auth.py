@@ -57,8 +57,15 @@ def check(candidate: str | None) -> bool:
     return bool(candidate) and hmac.compare_digest(candidate, TOKEN)
 
 
-def token_from(headers, query_params) -> str | None:
-    return headers.get(HEADER) or query_params.get("token")
+COOKIE = "minideck_token"
+
+
+def token_from(headers, query_params, cookies=None) -> str | None:
+    """Cabecera (fetch), ?token= (WebSocket, <img>) o cookie (modo sin JS).
+    La cookie es HttpOnly + SameSite=Strict, y los POST/WS exigen además el
+    mismo origen, así que no abre la puerta a CSRF."""
+    return (headers.get(HEADER) or query_params.get("token")
+            or (cookies or {}).get(COOKIE))
 
 
 def is_loopback(host: str | None) -> bool:

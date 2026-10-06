@@ -11,10 +11,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ### Añadido
 - **Escanear el QR desde la propia app** al emparejar: imprescindible en la PWA instalada, que no comparte el token con el navegador. Con HTTPS usa la cámara en vivo; por HTTP en la red local, una foto del QR (jsQR). El código se verifica con el servidor antes de guardarse.
+- **Modo sin JavaScript** (`/basic`): toda la app con enlaces y formularios HTML renderizados en el servidor (emparejar, usar el deck, carpetas, pulsación larga, sliders, mezclador, Now Playing, Discord, OBS, Home Assistant y editor completo: botones, páginas, deshacer, importar y exportar). Sin JS, `/` redirige ahí solo. La autenticación usa una cookie `HttpOnly` + `SameSite=Strict` que también vale para la app con JS.
 
 ### Corregido
 - Al salir de pantalla completa con **Esc** (o F11) la barra superior quedaba oculta y no se podía volver a editar ni arrastrar widgets. Ahora Esc también cierra el editor y el buscador de iconos, y en escritorio hay un botón ✕ visible en modo inmersivo.
 - El **editor de widgets** y el **Panel de widgets** se quedaban oscuros con el tema LCD: el tema define ya toda la paleta, así que todo lo que usa variables (incluidos widgets de plugins) lo sigue.
+- Los **POST desde el navegador** se rechazaban (403), por ejemplo al guardar un widget en el Panel: con `Referrer-Policy: no-referrer` el navegador envía `Origin: null` y la protección anti-CSRF lo bloqueaba. Ahora es `same-origin` (el referrer sigue sin salir hacia otros sitios).
 
 ## [1.1.0] - 2026-10-06
 

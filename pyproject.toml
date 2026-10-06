@@ -100,6 +100,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # los esquemas de params van en una sola línea del decorador @action
 "server/actions/*.py" = ["E501"]
+# plantillas HTML del modo sin JavaScript
+"server/basic.py" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["actions", "auth", "main", "paths", "version"]

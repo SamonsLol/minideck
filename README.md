@@ -33,6 +33,7 @@ Issues and PRs are welcome in English or Spanish.
 - **Visual editor** right on the phone: pages, icons (Lucide), colors, drag and drop, **undo**, and deck **import/export**.
 - **Works offline on your LAN**: icons are cached by the server after first use.
 - **Spanish and English** UI (tap **ES/EN** in the top bar).
+- **Works without JavaScript**: `/basic` is a server-rendered version with plain links and forms (use the deck, folders, long press, sliders, OBS, Home Assistant, and a full deck editor). Browsers without JS land there automatically; JavaScript only adds real-time updates, drag and drop and animations.
 - **Plugins** in Python + JS, plus custom widgets built in the Control Panel (`/panel.html`).
 - **Secure QR pairing**: nobody else on your network can control your computer.
 
@@ -73,6 +74,8 @@ On Windows you can also double-click `MiniDeck.bat` (no console, tray icon).
 1. On the computer, open **http://localhost:8765/qr**.
 2. Scan the QR code with your phone's camera. MiniDeck opens already **paired**.
 3. Use *Share → Add to Home Screen* to run it full screen.
+
+The app installed on the home screen doesn't share storage with the browser (especially on iPhone), so the first time it opens it asks to pair again: tap **📷 Scan QR code** and point at the computer's screen (over plain HTTP it takes a photo of the QR; with HTTPS it scans live), or type the code shown under the QR.
 
 The phone and the computer must be on the **same Wi-Fi network**. On Windows, allow Python/MiniDeck on **private networks** when the firewall asks.
 

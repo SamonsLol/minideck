@@ -33,6 +33,7 @@ Se aceptan issues y PRs en español o en inglés.
 - **Editor visual** desde el propio móvil: páginas, iconos (Lucide), colores, arrastrar y soltar, **deshacer** e **importar/exportar** decks.
 - **Funciona sin internet en tu red local**: el servidor guarda los iconos en caché tras el primer uso.
 - Interfaz en **español e inglés** (botón **ES/EN** de la barra superior).
+- **Funciona sin JavaScript**: `/basic` es una versión renderizada en el servidor con enlaces y formularios normales (usar el deck, carpetas, pulsación larga, sliders, OBS, Home Assistant y un editor completo del deck). Los navegadores sin JS llegan ahí solos; JavaScript solo añade el tiempo real, arrastrar y soltar y las animaciones.
 - **Plugins** en Python + JS, y widgets personalizados desde el Panel de Control (`/panel.html`).
 - **Emparejamiento seguro** por QR: nadie más en tu red puede controlar tu equipo.
 
@@ -73,6 +74,8 @@ En Windows también puedes hacer doble clic en `MiniDeck.bat` (sin consola, con 
 1. En el equipo abre **http://localhost:8765/qr**.
 2. Escanea el QR con la cámara del móvil. Se abre MiniDeck ya **emparejado**.
 3. *Compartir → Añadir a pantalla de inicio* para usarlo a pantalla completa.
+
+La app instalada en la pantalla de inicio no comparte almacenamiento con el navegador (sobre todo en iPhone), así que la primera vez pide emparejar otra vez: toca **📷 Escanear QR** y apunta a la pantalla del equipo (por HTTP hace una foto del QR; con HTTPS lo escanea en vivo), o escribe el código que aparece bajo el QR.
 
 El móvil y el equipo deben estar en la **misma red WiFi**. En Windows, cuando el Firewall pregunte, permite Python/MiniDeck en **redes privadas**.
 

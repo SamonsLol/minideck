@@ -29,6 +29,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 import auth
+import basic
 import icons
 from actions import (
     META,
@@ -302,19 +303,28 @@ async def security(request: Request, call_next):
             if not auth.local_request(client, request.headers):
                 return JSONResponse({"ok": False, "error": "solo desde este equipo"},
                                     status_code=403)
-        elif not auth.check(auth.token_from(request.headers, request.query_params)):
+        elif not auth.check(auth.token_from(request.headers, request.query_params,
+                                            request.cookies)):
             return JSONResponse({"ok": False, "error": "no autorizado"}, status_code=401)
         elif request.method != "GET" and not auth.same_origin(request.headers):
             return JSONResponse({"ok": False, "error": "origen no permitido"},
                                 status_code=403)
 
     response = await call_next(request)
+    # QR escaneado (/?token=…): guardar también la cookie, para que el modo sin
+    # JavaScript (/basic) quede emparejado aunque el navegador no ejecute JS.
+    tok = request.query_params.get("token")
+    if path == "/" and tok and auth.check(tok) and not auth.AUTH_DISABLED:
+        basic.set_token_cookie(response, tok)
     # Evita que el navegador/PWA cachee el frontend: sin esto, iOS puede
     # quedarse con versiones viejas de CSS/JS.
     if path == "/" or path.endswith((".html", ".css", ".js", ".webmanifest")):
         response.headers["Cache-Control"] = "no-store, must-revalidate"
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    # same-origin: el referrer nunca sale hacia otros sitios (CDN, Iconify), pero
+    # los POST propios llevan su Origin real (con no-referrer el navegador manda
+    # "Origin: null" y la protección anti-CSRF los rechazaría)
+    response.headers.setdefault("Referrer-Policy", "same-origin")
     return response
 
 
@@ -360,7 +370,7 @@ def find_button(cfg: dict, button_id: str) -> dict | None:
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     if not auth.same_origin(ws.headers) or \
-            not auth.check(auth.token_from(ws.headers, ws.query_params)):
+            not auth.check(auth.token_from(ws.headers, ws.query_params, ws.cookies)):
         # 4401: código propio → el cliente muestra la pantalla de emparejar
         await ws.close(code=4401)
         return
@@ -664,6 +674,8 @@ padding:12px;border-radius:16px}} .u{{font-family:ui-monospace,monospace;font-si
 No compartas este QR: da control total sobre este equipo.</div>
 <div class="t">MiniDeck {__version__} · software libre bajo {LICENSE}, sin garantía ·
 <a style="color:inherit" href="{html.escape(SOURCE_URL)}">código fuente</a></div>
+<div class="t">¿Navegador sin JavaScript? Usa
+<a style="color:inherit" href="/basic">el modo básico</a> y escribe el código de arriba.</div>
 </body></html>"""
     return Response(content=page, media_type="text/html",
                     headers={"Cache-Control": "no-store"})
@@ -692,6 +704,20 @@ async def manifest(token: str = ""):
     return Response(content=json.dumps(data, ensure_ascii=False),
                     media_type="application/manifest+json")
 
+
+# Modo sin JavaScript (formularios HTML renderizados en el servidor)
+basic.configure(
+    load_config=load_config,
+    save_config=save_config,
+    validate_config=validate_config,
+    run_action=lambda action, params: run_action(action, params),
+    collect_state=lambda: collect_state(),       # buscada al llamar (tests)
+    restore_backup=restore_backup,
+    list_actions=lambda: sorted(n for n, m in META.items() if not m["state"]),
+    plugin_widget_types=lambda: [pid for pid, p in PLUGINS.items()
+                                 if p.get("status") == "loaded" and "widget.js" in p["frontend"]],
+)
+app.include_router(basic.router)
 
 # Frontend (al final para no tapar /ws, /api ni /plugins)
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

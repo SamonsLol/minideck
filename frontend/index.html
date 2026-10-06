@@ -23,8 +23,15 @@
     try { var t = localStorage.getItem("minideck-theme");
           if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
   </script>
+  <!-- Sin JavaScript: ir a la versión con formularios -->
+  <noscript><meta http-equiv="refresh" content="0; url=/basic"></noscript>
 </head>
 <body>
+  <!-- Sin JavaScript: la versión con formularios (todo funciona igual, sin tiempo real) -->
+  <noscript>
+    <p style="padding:24px;text-align:center">
+      <a href="/basic" style="color:#60a5fa">MiniDeck sin JavaScript →</a></p>
+  </noscript>
   <div class="splash" id="splash">
     <img class="splash-logo" src="icons/icon-192.png" alt="">
     <div class="splash-title">MiniDeck</div>

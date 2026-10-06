@@ -396,3 +396,54 @@ def test_lcd_theme_reaches_editors(browser, server, path):
     rgb = [int(x) for x in bg[bg.index("(") + 1:bg.index(")")].split(",")[:3]]
     ctx.close()
     assert sum(rgb) / 3 > 150, f"{path}: fondo oscuro con tema LCD ({bg})"
+
+
+def test_everything_works_without_javascript(browser, server):
+    """JavaScript desactivado: / lleva al modo básico, y emparejar, pulsar,
+    abrir carpetas y editar funcionan con formularios."""
+    ctx = browser.new_context(java_script_enabled=False, viewport={"width": 390, "height": 844},
+                              locale="es")
+    page = ctx.new_page()
+    page.goto(server + "/")
+    page.wait_for_url("**/basic", timeout=10000)
+    page.fill('input[name="code"]', main.auth.TOKEN)
+    page.click(".b-pair button")
+    page.wait_for_selector(".b-tabs")
+    page.click('.b-tab:has-text("UI A")')
+    page.click('form:has(input[value="ui_long"]) .b-key')        # toque
+    assert "toque-corto" in page.locator(".b-flash").inner_text()
+    page.click('form:has(input[value="ui_long"]) .b-long')       # "mantener"
+    assert "toque-largo" in page.locator(".b-flash").inner_text()
+    page.click('a.b-key:has-text("Carpeta")')                    # carpeta
+    page.click('a.b-key:has-text("Volver")')
+    assert page.locator('.b-tab.on').inner_text() == "UI A"
+    # editor sin JS
+    page.click('a.b-btn[href^="/basic/edit"]')
+    page.click('li:has-text("Largo") a.b-mini')
+    page.fill('input[name="label"]', "Largo editado")
+    page.click("button.b-primary")
+    assert page.locator(".b-flash").is_visible()
+    labels = [b.get("label") for p in main.load_config()["pages"] if p["id"] == "ui_a"
+              for b in p["buttons"]]
+    assert "Largo editado" in labels
+    ctx.close()
+    # dejarlo como estaba
+    cfg = main.load_config()
+    for p in cfg["pages"]:
+        for b in p["buttons"]:
+            if b.get("label") == "Largo editado":
+                b["label"] = "Largo"
+    main.save_config(cfg)
+
+
+def test_browser_posts_are_accepted(browser, server):
+    """Regresión: con Referrer-Policy no-referrer el navegador enviaba
+    "Origin: null" y la protección anti-CSRF rechazaba los POST legítimos
+    (p. ej. guardar un widget desde el Panel)."""
+    ctx, page, _ = _open(browser, server)
+    status = page.evaluate("""async () => (await MiniDeckAuth.api('/api/custom_widget', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: 'regresion_origin', name: 'R', html: '<b>x</b>'})})).status""")
+    ctx.close()
+    assert status == 200
+    assert "regresion_origin" in main.load_config().get("customWidgets", {})
