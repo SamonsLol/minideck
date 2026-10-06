@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # SPDX-FileCopyrightText: 2026 Samons
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 LICENSE = "AGPL-3.0-or-later"
 # AGPL §13: quien use MiniDeck por la red debe poder obtener el código fuente.

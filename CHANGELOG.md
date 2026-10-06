@@ -2,7 +2,7 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.3.0] - 2026-10-06
 
 ### Añadido
 - **Editor sin JSON**: los parámetros de cada acción, la pulsación larga y el estado del botón se configuran con campos normales (texto, números con deslizador, desplegables con opciones legibles, sí/no, una lista por líneas) generados a partir del esquema de la acción. Las acciones aparecen con nombre legible («Atajo de teclado · hotkey»). El JSON sigue disponible, plegado, en «Avanzado» y ambos se mantienen sincronizados. También en el editor sin JavaScript (`/basic`).
