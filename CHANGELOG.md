@@ -2,7 +2,7 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.2.0] - 2026-10-06
 
 ### Cambiado
 - La app instalada (PWA) ya no se bloquea en vertical: gira también en horizontal (`orientation: any`).
