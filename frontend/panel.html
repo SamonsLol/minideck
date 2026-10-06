@@ -97,6 +97,51 @@
     border-radius:9px; color:var(--text); padding:8px 11px; font-size:13.5px; width:100%; }
   .empty-simple { color:var(--muted); font-size:13px; text-align:center; padding:26px 0;
     border:1px dashed var(--border); border-radius:14px; }
+  /* ------- 🧩 plugins (vista a pantalla completa dentro del panel) ------- */
+  .plg { position:fixed; inset:0; z-index:50; background:var(--bg); color:var(--text);
+    overflow-y:auto; overflow-x:hidden; }
+  .plg[hidden] { display:none; }
+  .plg-in { max-width:820px; margin:0 auto; padding:16px; display:flex; flex-direction:column; gap:18px; }
+  .plg-head { display:flex; align-items:center; gap:10px; }
+  .plg-head h2 { font-size:18px; flex:1; }
+  .plg h3 { font-size:11.5px; font-weight:650; color:var(--muted); letter-spacing:.4px; margin-bottom:8px; }
+  .plg section { display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .plg-warn, .plg-note { font-size:12.5px; line-height:1.5; border:1px solid var(--border);
+    border-radius:12px; padding:10px 12px; background:var(--surface); }
+  .plg-warn { border-color:var(--err); }
+  .plg-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; min-width:0; }
+  .plg-row > input { flex:1 1 200px; min-width:0; }
+  .plg input[type=text], .plg input[type=url], .plg input[type=password],
+  .plg input[type=number], .plg textarea {
+    background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--text);
+    padding:8px 11px; font-size:13.5px; width:100%; min-width:0; font-family:inherit; }
+  .plg textarea { resize:vertical; font-family:var(--mono); font-size:12.5px; }
+  .plg-msg { font-size:13px; overflow-wrap:anywhere; }
+  .plg-msg:empty { display:none; }
+  .plg-msg.ok { color:var(--ok); } .plg-msg.err { color:var(--err); }
+  .plg-list { display:flex; flex-direction:column; gap:10px; }
+  .plg .card { min-width:0; overflow-wrap:anywhere; }
+  .plg-title { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .plg-title b { font-size:14.5px; }
+  .plg-title small, .plg-sub { color:var(--muted); font-size:12px; }
+  .plg-desc { font-size:13px; line-height:1.45; }
+  .plg-error { font-size:12.5px; color:var(--err); }
+  .plg-badge { font-size:11px; font-weight:650; border:1px solid currentColor; border-radius:999px;
+    padding:1px 8px; color:var(--muted); white-space:nowrap; }
+  .plg-badge.loaded { color:var(--ok); } .plg-badge.error { color:var(--err); }
+  .plg-check { display:inline-flex; align-items:center; gap:6px; font-size:13px; cursor:pointer; }
+  .plg-check input { width:16px; height:16px; accent-color:var(--acc); }
+  .plg details summary { cursor:pointer; font-size:13px; font-weight:600; color:var(--acc); }
+  .plg-form { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+  .plg-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .plg-field > label { font-size:12.5px; color:var(--muted); }
+  .plg-field small { font-size:11px; color:var(--muted); }
+  .plg-secret { display:flex; gap:6px; min-width:0; }
+  .plg-secret input { flex:1; }
+  .plg pre { max-height:140px; overflow:auto; font-family:var(--mono); font-size:10.5px;
+    color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:9px;
+    padding:8px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .plg a { color:var(--acc); }
 </style>
 </head>
 <body>
@@ -107,6 +152,7 @@
 <aside>
   <h1>MiniDeck<small>Panel de widgets personalizados</small></h1>
   <button class="btn primary" onclick="nuevo()">＋ Nuevo widget</button>
+  <button class="btn" id="pluginsBtn" onclick="abrirPlugins()">🧩 Plugins</button>
   <div id="list"></div>
   <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
     <div style="font-size:11px; font-weight:650; color:var(--muted); letter-spacing:.4px;">DEPENDENCIAS PYTHON (pip)</div>
@@ -180,6 +226,46 @@
     </div>
   </div>
 </main>
+
+<!-- 🧩 Plugins: instalar, activar y configurar sin tocar JSON -->
+<div id="plg" class="plg" hidden role="dialog" aria-modal="true" aria-labelledby="plgTitle">
+  <div class="plg-in">
+    <div class="plg-head">
+      <h2 id="plgTitle">🧩 Plugins</h2>
+      <button class="btn mini" onclick="cerrarPlugins()">✕ Cerrar</button>
+    </div>
+    <div class="plg-warn">⚠️ Los plugins ejecutan código en este equipo, con tus permisos.
+      <b>Instala solo plugins de autores en los que confíes.</b></div>
+
+    <section>
+      <h3>INSTALAR PLUGIN</h3>
+      <div id="plgInstallBox">
+        <div class="plg-row">
+          <input id="plgUrl" type="url" spellcheck="false" autocomplete="off"
+            placeholder="https://github.com/usuario/minideck-plugin">
+          <button class="btn primary" id="plgInstallBtn" onclick="instalarPlugin()">Instalar</button>
+        </div>
+        <div class="hint" style="margin-top:6px">Dirección de un repositorio de GitHub, de una
+          carpeta (…/tree/main/carpeta) o enlace directo a un .zip.</div>
+      </div>
+      <div id="plgLocalNote" class="plg-note" hidden>🔒 Por seguridad, instalar y desinstalar
+        plugins solo se puede hacer desde el propio equipo: abre este Panel en el ordenador
+        (localhost). Desde aquí sí puedes cambiar sus ajustes.</div>
+      <div id="plgMsg" class="plg-msg"></div>
+      <div id="plgReq"></div>
+    </section>
+
+    <section>
+      <h3>INSTALADOS</h3>
+      <div id="plgList" class="plg-list"><div class="hint">Cargando…</div></div>
+    </section>
+
+    <section>
+      <h3>EXPLORAR</h3>
+      <div id="plgCat" class="plg-list"><div class="hint">Cargando catálogo…</div></div>
+    </section>
+  </div>
+</div>
 
 <script src="auth.js?v=40"></script>
 <script>
@@ -472,6 +558,368 @@ async function pipInstall() {
       : '\n\n✗ Falló la instalación.');
   } catch (e) { out.textContent = 'Error: ' + e.message; }
 }
+
+/* ================= 🧩 PLUGINS =================
+   Todo lo que llega del servidor o de internet se pinta con textContent. */
+const CATALOGO_URL = 'https://raw.githubusercontent.com/SamonsLol/minideck/main/docs/plugins.json';
+const EN_LOCALHOST = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(location.hostname);
+const MASK = '••••••';
+const plg = { plugins: [], canInstall: false, canPip: true, catalogo: null };
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = text;
+  return e;
+}
+function boton(text, cls, onclick) {
+  const b = el('button', 'btn mini' + (cls ? ' ' + cls : ''), text);
+  b.type = 'button';
+  b.onclick = onclick;
+  return b;
+}
+function plgMsg(text, ok) {
+  const m = $('plgMsg');
+  m.textContent = text || '';
+  m.className = 'plg-msg ' + (ok ? 'ok' : 'err');
+}
+async function plgApi(url, method, body) {
+  const opts = { method: method || 'GET' };
+  if (body !== undefined) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = JSON.stringify(body);
+  }
+  const r = await MiniDeckAuth.api(url, opts);
+  let data = {};
+  try { data = await r.json(); } catch (e) { /* respuesta sin JSON */ }
+  if (r.status === 403 && (url.includes('/install') || method === 'DELETE')) soloLocal();
+  return { status: r.status, ok: r.ok && data.ok !== false, data };
+}
+function soloLocal() {
+  plg.canInstall = false;
+  $('plgInstallBox').hidden = true;
+  $('plgLocalNote').hidden = false;
+}
+
+async function abrirPlugins() {
+  $('plg').hidden = false;
+  plgMsg('');
+  await cargarPlugins();
+  cargarCatalogo();
+}
+function cerrarPlugins() { $('plg').hidden = true; }
+
+async function cargarPlugins() {
+  try {
+    const r = await plgApi('/api/plugins/store');
+    if (!r.ok) throw new Error(r.data.error || 'HTTP ' + r.status);
+    plg.plugins = r.data.plugins || [];
+    plg.canInstall = !!r.data.canInstall && EN_LOCALHOST;
+    plg.canPip = r.data.canPip !== false;
+  } catch (e) {
+    $('plgList').replaceChildren(el('div', 'plg-msg err', 'No se pudo cargar la lista: ' + e.message));
+    return;
+  }
+  $('plgInstallBox').hidden = !plg.canInstall;
+  $('plgLocalNote').hidden = plg.canInstall;
+  pintarInstalados();
+  pintarCatalogo();
+}
+
+const ESTADOS = { loaded: 'activo', error: 'error', skipped: 'no compatible', disabled: 'desactivado' };
+
+function pintarInstalados() {
+  const box = $('plgList');
+  box.replaceChildren();
+  if (!plg.plugins.length) { box.appendChild(el('div', 'hint', 'No hay plugins instalados.')); return; }
+  for (const p of plg.plugins) box.appendChild(tarjetaPlugin(p));
+}
+
+function tarjetaPlugin(p) {
+  const card = el('div', 'card');
+  card.dataset.plugin = p.id;
+  const title = el('div', 'plg-title');
+  title.append(el('b', '', p.name || p.id));
+  const meta = [p.version ? 'v' + p.version : '', p.author, p.user ? 'de usuario' : 'incluido']
+    .filter(Boolean).join(' · ');
+  title.append(el('small', '', meta));
+  title.append(el('span', 'plg-badge ' + (p.status || ''), ESTADOS[p.status] || p.status || '¿?'));
+  card.append(title);
+  if (p.description) card.append(el('div', 'plg-desc', p.description));
+  if (p.error) card.append(el('div', 'plg-error', p.error));
+  // ofrecer instalar dependencias solo si el plugin no pudo cargar
+  if (p.requires && p.requires.length && p.status === 'error') card.append(filaRequisitos(p.requires));
+
+  const row = el('div', 'plg-row');
+  const lab = el('label', 'plg-check');
+  const chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.checked = p.enabled !== false;
+  const st = el('span', 'plg-sub');
+  chk.onchange = async () => {
+    const r = await plgApi(`/api/plugins/${encodeURIComponent(p.id)}/enabled`, 'POST',
+                           { enabled: chk.checked });
+    st.textContent = r.ok ? r.data.message : ('Error: ' + (r.data.error || r.status));
+    if (!r.ok) chk.checked = !chk.checked;
+  };
+  lab.append(chk, document.createTextNode('Activado'));
+  row.append(lab);
+  if (p.user && plg.canInstall) {
+    row.append(boton('Desinstalar', 'danger', () => desinstalar(p)));
+  }
+  row.append(st);
+  card.append(row);
+  if (p.schema && p.schema.length) card.append(formAjustes(p));
+  return card;
+}
+
+function filaRequisitos(reqs) {
+  const wrap = el('div', 'plg-form');
+  wrap.style.marginTop = '0';
+  const row = el('div', 'plg-row');
+  row.append(el('span', 'plg-sub', 'Necesita:'));
+  const out = el('pre');
+  out.hidden = true;
+  for (const pkg of reqs) {
+    if (plg.canInstall && plg.canPip) {
+      const b = boton('📦 Instalar ' + pkg, '', async () => {
+        b.disabled = true;
+        b.textContent = 'Instalando ' + pkg + '…';
+        out.hidden = false;
+        out.textContent = 'pip install ' + pkg + '…';
+        try {
+          const r = await plgApi('/api/pip', 'POST', { package: pkg });
+          out.textContent = (r.data.output || '') + (r.ok
+            ? '\n\n✓ Instalado. Reinicia MiniDeck para que el plugin lo use.'
+            : '\n\n✗ Falló la instalación.');
+          b.textContent = (r.ok ? '✓ ' : '✗ ') + pkg;
+        } catch (e) {
+          out.textContent = 'Error: ' + e.message;
+          b.textContent = pkg;
+        }
+        b.disabled = false;
+      });
+      row.append(b);
+    } else {
+      row.append(el('code', 'plg-sub', pkg));
+    }
+  }
+  wrap.append(row, out);
+  return wrap;
+}
+
+function etiqueta(key) {
+  const t = key.replace(/[_-]+/g, ' ').trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function campoAjuste(p, s) {
+  const field = el('div', 'plg-field');
+  const id = `plg-${p.id}-${s.key}`;
+  const val = p.settings ? p.settings[s.key] : undefined;
+  const lab = el('label', '', etiqueta(s.key));
+  lab.htmlFor = id;
+  if (s.type === 'other') {
+    field.append(lab, el('small', '', 'Este ajuste avanzado no se puede cambiar desde aquí.'));
+    return field;
+  }
+  let input;
+  if (s.type === 'bool') {
+    const l2 = el('label', 'plg-check');
+    input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = !!val;
+    input.id = id;
+    input.dataset.key = s.key;
+    input.dataset.type = s.type;
+    l2.append(input, document.createTextNode(etiqueta(s.key)));
+    field.append(l2);
+    return field;
+  }
+  if (s.type === 'int' || s.type === 'float') {
+    input = document.createElement('input');
+    input.type = 'number';
+    input.step = (s.type === 'int') ? '1' : 'any';
+    input.value = (val === undefined || val === null) ? '' : val;
+  } else if (s.type === 'list') {
+    input = document.createElement('textarea');
+    input.rows = 3;
+    input.value = Array.isArray(val) ? val.join('\n') : '';
+    input.spellcheck = false;
+  } else {
+    input = document.createElement('input');
+    input.type = s.secret ? 'password' : 'text';
+    input.value = (val === undefined || val === null) ? '' : val;
+    input.spellcheck = false;
+    input.autocomplete = s.secret ? 'new-password' : 'off';
+    if (!s.secret && s.default) input.placeholder = String(s.default);
+  }
+  input.id = id;
+  input.dataset.key = s.key;
+  input.dataset.type = s.type;
+  field.append(lab);
+  if (s.secret) {
+    // la máscara se selecciona entera al entrar: así se reemplaza al escribir
+    input.onfocus = () => { if (input.value === MASK) input.select(); };
+    const wrap = el('div', 'plg-secret');
+    const eye = boton('👁', '', () => {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+    eye.title = 'Mostrar / ocultar';
+    wrap.append(input, eye);
+    field.append(wrap, el('small', '', 'Se guarda solo en este equipo y nunca se muestra.'));
+  } else {
+    field.append(input);
+    if (s.type === 'list') field.append(el('small', '', 'Uno por línea.'));
+  }
+  return field;
+}
+
+function formAjustes(p) {
+  const det = el('details');
+  det.append(el('summary', '', '⚙️ Ajustes'));
+  const form = el('form', 'plg-form');
+  const st = el('span', 'plg-msg');
+  form.onsubmit = (ev) => { ev.preventDefault(); guardarAjustes(p, form, st); };
+  for (const s of p.schema) form.append(campoAjuste(p, s));
+  const row = el('div', 'plg-row');
+  const save = el('button', 'btn primary', 'Guardar ajustes');
+  save.type = 'submit';
+  row.append(save, st);
+  form.append(row);
+  det.append(form);
+  return det;
+}
+
+async function guardarAjustes(p, form, st) {
+  const settings = {};
+  for (const input of form.querySelectorAll('[data-key]')) {
+    const k = input.dataset.key, t = input.dataset.type;
+    if (t === 'bool') settings[k] = input.checked;
+    else if (t === 'int' || t === 'float') {
+      if (input.value.trim() === '') continue;
+      settings[k] = Number(input.value);
+    } else settings[k] = input.value;
+  }
+  st.className = 'plg-msg';
+  st.textContent = 'Guardando…';
+  try {
+    const r = await plgApi(`/api/plugins/${encodeURIComponent(p.id)}/settings`, 'PUT', { settings });
+    if (!r.ok) throw new Error(r.data.error || 'HTTP ' + r.status);
+    p.settings = r.data.settings;
+    for (const input of form.querySelectorAll('[data-key]')) {
+      const s = p.schema.find(x => x.key === input.dataset.key);
+      if (s && s.secret) {
+        input.value = p.settings[s.key] ?? '';
+        input.type = 'password';
+      }
+    }
+    st.className = 'plg-msg ok';
+    st.textContent = '✓ ' + (r.data.message || 'Guardado');
+  } catch (e) {
+    st.className = 'plg-msg err';
+    st.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function desinstalar(p) {
+  if (!confirm(`¿Desinstalar «${p.name || p.id}»? Se borrará su carpeta de este equipo.`)) return;
+  const r = await plgApi('/api/plugins/' + encodeURIComponent(p.id), 'DELETE');
+  plgMsg(r.ok ? r.data.message : ('Error: ' + (r.data.error || r.status)), r.ok);
+  await cargarPlugins();
+}
+
+async function instalarPlugin(url) {
+  url = (url || $('plgUrl').value).trim();
+  if (!url) { plgMsg('Pega la dirección del plugin.', false); return; }
+  const btn = $('plgInstallBtn');
+  btn.disabled = true;
+  btn.textContent = 'Instalando…';
+  plgMsg('Descargando e instalando…', true);
+  $('plgReq').replaceChildren();
+  try {
+    const r = await plgApi('/api/plugins/install', 'POST', { url });
+    if (!r.ok) throw new Error(r.data.error || 'HTTP ' + r.status);
+    plgMsg('✓ ' + r.data.message, true);
+    if (r.data.requires && r.data.requires.length) {
+      $('plgReq').replaceChildren(filaRequisitos(r.data.requires));
+    }
+    $('plgUrl').value = '';
+    await cargarPlugins();
+  } catch (e) {
+    plgMsg('✗ ' + e.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Instalar';
+  }
+}
+
+async function cargarCatalogo() {
+  if (plg.catalogo) { pintarCatalogo(); return; }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const str = (v) => (typeof v === 'string' ? v : '');
+  try {
+    const r = await fetch(CATALOGO_URL, { signal: ctrl.signal, cache: 'no-store',
+                                          credentials: 'omit', referrerPolicy: 'no-referrer' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    plg.catalogo = (Array.isArray(data.plugins) ? data.plugins : [])
+      .filter(x => x && typeof x === 'object' && str(x.url).startsWith('https://'))
+      .map(x => ({
+        id: str(x.id), name: str(x.name) || str(x.id), description: str(x.description),
+        author: str(x.author), url: str(x.url),
+        platforms: Array.isArray(x.platforms) ? x.platforms.filter(v => typeof v === 'string') : [],
+      }));
+  } catch (e) {
+    plg.catalogo = null;
+    $('plgCat').replaceChildren(el('div', 'plg-note',
+      'Sin conexión: no se pudo cargar el catálogo de la comunidad. ' +
+      'Puedes instalar un plugin pegando su dirección arriba.'));
+    return;
+  } finally {
+    clearTimeout(timer);
+  }
+  pintarCatalogo();
+}
+
+function pintarCatalogo() {
+  if (!plg.catalogo) return;
+  const box = $('plgCat');
+  box.replaceChildren();
+  if (!plg.catalogo.length) { box.appendChild(el('div', 'hint', 'El catálogo está vacío.')); return; }
+  const instalados = new Set(plg.plugins.map(p => p.id));
+  for (const c of plg.catalogo) {
+    const card = el('div', 'card');
+    card.dataset.catalog = c.id;
+    const title = el('div', 'plg-title');
+    title.append(el('b', '', c.name));
+    if (c.author) title.append(el('small', '', 'de ' + c.author));
+    card.append(title);
+    if (c.description) card.append(el('div', 'plg-desc', c.description));
+    if (c.platforms.length) card.append(el('div', 'plg-sub', 'Solo para: ' + c.platforms.join(', ')));
+    const row = el('div', 'plg-row');
+    if (instalados.has(c.id)) {
+      const b = el('button', 'btn mini', 'Instalado ✓');
+      b.disabled = true;
+      row.append(b);
+    } else if (plg.canInstall) {
+      row.append(boton('Instalar', 'primary', () => instalarPlugin(c.url)));
+    }
+    const a = el('a', 'plg-sub', 'Ver código');
+    a.href = c.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    row.append(a);
+    card.append(row);
+    box.append(card);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('plg').hidden) cerrarPlugins();
+});
+if (location.hash === '#plugins') MiniDeckAuth.ensure().then(t => { if (t) abrirPlugins(); });
 
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); guardar(); }

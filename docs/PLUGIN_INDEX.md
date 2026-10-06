@@ -1,6 +1,6 @@
 # Índice de plugins de la comunidad
 
-Plugins creados por la comunidad. Para añadir el tuyo, abre un PR con una fila nueva (orden alfabético). Ver [PLUGINS.md](PLUGINS.md).
+Plugins creados por la comunidad. Para añadir el tuyo, abre un PR con una fila nueva (orden alfabético) **y** una entrada en [`plugins.json`](plugins.json) (`id`, `name`, `description`, `author`, `url`, `platforms`): ese archivo es el catálogo que muestra el Panel en «🧩 Plugins → Explorar», desde donde se instala con un clic. `url` es la dirección del repo de GitHub o de la carpeta del plugin (`https://github.com/usuario/repo/tree/main/carpeta`). Ver [PLUGINS.md](PLUGINS.md).
 
 > Los plugins son código que se ejecuta en tu equipo. MiniDeck no revisa ni garantiza los plugins de terceros: instala solo los que te parezcan de confianza.
 

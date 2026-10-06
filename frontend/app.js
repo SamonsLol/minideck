@@ -1140,7 +1140,7 @@ function actionHint(action) {
   if (action === "page") return T("ed.pageAction");
   const info = actionsSchema[action];
   if (!info) return "";
-  return [info.doc, info.example && `params: ${info.example}`].filter(Boolean).join("\n");
+  return info.doc || "";      // el ejemplo JSON queda para "Avanzado"
 }
 
 /* ---------------------------------------------- deshacer / importar / exportar */
@@ -1299,19 +1299,32 @@ function ensureSheet() {
         <label class="f-row row-action"><span data-i18n="ed.action"></span>
           <select class="f-action"></select></label>
         <div class="f-hint"></div>
-        <label class="f-row"><span data-i18n="ed.params"></span>
-          <textarea class="f-params" rows="4" spellcheck="false"
-                    autocorrect="off" autocapitalize="off"></textarea></label>
+        <div class="pf f-pform"></div>
+        <details class="f-adv"><summary data-i18n="ed.advanced"></summary>
+          <label class="f-row"><span data-i18n="ed.params"></span>
+            <textarea class="f-params" rows="4" spellcheck="false"
+                      autocorrect="off" autocapitalize="off"></textarea></label>
+        </details>
       </div>
       <div class="only-key">
         <label class="f-row"><span data-i18n="ed.long"></span>
           <select class="f-long"></select></label>
-        <label class="f-row row-long-params"><span data-i18n="ed.longParams"></span>
-          <textarea class="f-long-params" rows="3" spellcheck="false"
-                    autocorrect="off" autocapitalize="off"></textarea></label>
-        <label class="f-row"><span data-i18n="ed.when"></span>
-          <textarea class="f-when" rows="3" spellcheck="false" autocorrect="off"
-                    autocapitalize="off"></textarea></label>
+        <div class="row-long-params">
+          <div class="pf f-long-pform"></div>
+          <details class="f-adv"><summary data-i18n="ed.advanced"></summary>
+            <label class="f-row"><span data-i18n="ed.longParams"></span>
+              <textarea class="f-long-params" rows="3" spellcheck="false"
+                        autocorrect="off" autocapitalize="off"></textarea></label>
+          </details>
+        </div>
+        <details class="f-when-box"><summary data-i18n="ed.whenTitle"></summary>
+          <div class="pf f-when-form"></div>
+          <details class="f-adv"><summary data-i18n="ed.advanced"></summary>
+            <label class="f-row"><span data-i18n="ed.when"></span>
+              <textarea class="f-when" rows="3" spellcheck="false" autocorrect="off"
+                        autocapitalize="off"></textarea></label>
+          </details>
+        </details>
       </div>
       <div class="only-slider f-grid3">
         <label class="f-row"><span data-i18n="ed.min"></span> <input class="f-min" type="number"></label>
@@ -1350,22 +1363,19 @@ function ensureSheet() {
   sheet.querySelector(".f-action").onchange = () => {
     const act = sheet.querySelector(".f-action").value;
     sheet.querySelector(".f-hint").textContent = actionHint(act);
-    const ta = sheet.querySelector(".f-params");
-    let cur = {};
-    try { cur = JSON.parse(ta.value || "{}"); } catch { /* se respeta lo escrito */ }
-    if (!Object.keys(cur).length || ta.dataset.template === ta.value) {
-      ta.value = JSON.stringify(paramsTemplate(act), null, 2);
-      ta.dataset.template = ta.value;
-    }
+    switchParams(sheet.querySelector(".f-params"), act);
+    renderForms(sheet);
   };
   sheet.querySelector(".f-long").onchange = () => {
     const act = sheet.querySelector(".f-long").value;
     sheet.querySelector(".row-long-params").style.display = act ? "" : "none";
-    const ta = sheet.querySelector(".f-long-params");
-    if (act && (!ta.value.trim() || ta.value.trim() === "{}")) {
-      ta.value = JSON.stringify(paramsTemplate(act), null, 2);
-    }
+    if (act) switchParams(sheet.querySelector(".f-long-params"), act);
+    renderForms(sheet);
   };
+  // si alguien edita el JSON a mano, el formulario se actualiza al salir
+  for (const sel of [".f-params", ".f-long-params", ".f-when"]) {
+    sheet.querySelector(sel).addEventListener("change", () => renderForms(sheet));
+  }
   sheet.querySelector(".sheet-save").onclick = () => applyEditor(sheet);
   sheet.querySelector(".t-del").onclick = () => {
     const i = Number(sheet.dataset.index);
@@ -1503,6 +1513,49 @@ async function renderIconGrid(ov) {
   if (!list.length) grid.innerHTML = `<div class="ip-empty">${T("ip.none")}</div>`;
 }
 
+/* Al cambiar de acción: plantilla de la nueva acción conservando los valores
+   de los campos que sigan existiendo (p. ej. "url" de website → http_request). */
+function switchParams(ta, action) {
+  let cur = {};
+  try { cur = JSON.parse(ta.value || "{}"); } catch { /* se ignora lo inválido */ }
+  const tpl = paramsTemplate(action);
+  const schema = actionsSchema[action]?.schema || {};
+  const keep = Object.fromEntries(Object.entries(cur).filter(([k]) => k in schema || k in tpl));
+  ta.value = JSON.stringify({ ...tpl, ...keep }, null, 2);
+}
+
+/* Formularios sin JSON (forms.js): pintan campos a partir del esquema y
+   escriben en los <textarea> JSON, que es lo que se guarda. */
+function renderForms(sheet) {
+  const F = window.MiniDeckForms;
+  const ctx = { pages: state.config.pages.map(p => ({ id: p.id, name: p.name })) };
+  const parse = (ta) => { try { return JSON.parse(ta.value || "{}"); } catch { return null; } };
+  const bind = (taSel, boxSel, action) => {
+    const ta = sheet.querySelector(taSel);
+    const box = sheet.querySelector(boxSel);
+    const values = parse(ta);
+    if (values === null) {             // JSON roto: no pisarlo, avisar
+      box.textContent = T("form.badJson");
+      return;
+    }
+    F.paramsForm(box, action, actionsSchema[action], values, (v) => {
+      ta.value = JSON.stringify(v, null, 2);
+    }, ctx);
+  };
+  bind(".f-params", ".f-pform", sheet.querySelector(".f-action").value);
+  const long = sheet.querySelector(".f-long").value;
+  if (long) bind(".f-long-params", ".f-long-pform", long);
+  const wta = sheet.querySelector(".f-when");
+  let when = null;
+  try { when = wta.value.trim() ? JSON.parse(wta.value) : null; } catch { when = undefined; }
+  if (when !== undefined) {
+    F.whenForm(sheet.querySelector(".f-when-form"), when, (v) => {
+      wta.value = v ? JSON.stringify(v, null, 2) : "";
+    }, state.live);
+  }
+  sheet.querySelector(".f-when-box").open = Boolean(when?.key);
+}
+
 function openEditor(index) {
   const w = currentPage().buttons[index];
   if (!w) return;
@@ -1538,7 +1591,8 @@ function openEditor(index) {
     }
     for (const a of allActions) {
       const o = document.createElement("option");
-      o.value = o.textContent = a;
+      o.value = a;
+      o.textContent = window.MiniDeckForms.actionLabel(a);
       sel.appendChild(o);
     }
     if (current && !allActions.includes(current)) {
@@ -1558,6 +1612,7 @@ function openEditor(index) {
     w.longAction ? JSON.stringify(w.longParams ?? {}, null, 2) : "";
   sheet.querySelector(".row-long-params").style.display = w.longAction ? "" : "none";
   sheet.querySelector(".f-when").value = w.when ? JSON.stringify(w.when, null, 2) : "";
+  renderForms(sheet);
   sheet.querySelector(".f-min").value = w.min ?? 0;
   sheet.querySelector(".f-max").value = w.max ?? 100;
   sheet.querySelector(".f-vparam").value = w.valueParam ?? "level";

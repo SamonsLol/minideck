@@ -243,9 +243,9 @@ def test_editor_preserves_unknown_fields_and_fills_template(browser, server):
     # plantilla de params al cambiar de acción
     page.click('.key[data-id="ui_folder"]', force=True)
     page.wait_for_selector("#editSheet.open")
-    page.fill(".f-params", "{}")
     page.select_option(".f-action", "website")
     assert '"url"' in page.locator(".f-params").input_value()
+    assert page.locator(".f-pform input[type=url]").is_visible()     # campo, no JSON
     ctx.close()
 
 
@@ -489,3 +489,68 @@ def test_few_widgets_still_fill_the_screen(browser, server):
     ctx.close()
     assert grid[0] <= grid[1] + 1                  # sin scroll
     assert key_h > 300                             # ocupa la altura disponible
+
+
+def test_editor_forms_without_json(browser, server):
+    """Quien no sabe JSON configura acción, pulsación larga y estado con campos."""
+    ctx, page, _ = _open(browser, server)
+    page.locator(".page-tab", has_text="UI A").click()
+    page.click("#editBtn")
+    page.click('.key[data-id="ui_state"]', force=True)
+    page.wait_for_selector("#editSheet.open")
+    assert page.locator(".f-adv").first.get_attribute("open") is None      # JSON plegado
+    # acción: abrir web → campo "Dirección web"
+    page.select_option(".f-action", "website")
+    page.fill(".f-pform input[type=url]", "https://example.com")
+    # pulsación larga: apagar/suspender → desplegable con opciones legibles
+    page.select_option(".f-long", "power")
+    page.select_option(".f-long-pform select", "sleep")
+    # estado: formulario (sin JSON)
+    page.fill(".f-when-form #pf-w-key", "t_ui.on")
+    page.fill(".f-when-form #pf-w-label", "Activo")
+    page.click(".sheet-save")
+    page.wait_for_timeout(700)
+    ctx.close()
+    b = next(b for p in main.load_config()["pages"] if p["id"] == "ui_a"
+             for b in p["buttons"] if b["id"] == "ui_state")
+    assert b["action"] == "website" and b["params"] == {"url": "https://example.com"}
+    assert b["longAction"] == "power" and b["longParams"]["mode"] == "sleep"
+    assert b["when"]["key"] == "t_ui.on" and b["when"]["label"] == "Activo"
+    # restaurar
+    cfg = main.load_config()
+    for p in cfg["pages"]:
+        for x in p["buttons"]:
+            if x["id"] == "ui_state":
+                x.update({"action": "t_ui_tap", "params": {},
+                          "when": {"key": "t_ui.on", "label": "Encendido", "color": "#f87171"}})
+                x.pop("longAction", None)
+                x.pop("longParams", None)
+    main.save_config(cfg)
+
+
+@pytest.mark.parametrize("width,height", [(1000, 700), (360, 740)])
+def test_panel_plugins_view(browser, server, width, height):
+    """Panel → 🧩 Plugins: lista los instalados (el ejemplo «Hola mundo») con un
+    formulario de ajustes de verdad (sin JSON) y no se desborda a 360 px."""
+    ctx = browser.new_context(viewport={"width": width, "height": height}, locale="es")
+    page = ctx.new_page()
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.goto(server + "/panel.html")
+    page.click("#pluginsBtn", force=True)
+    card = page.locator('#plgList .card[data-plugin="hello"]')
+    card.wait_for()
+    assert "Hola mundo" in card.inner_text()
+    card.locator("summary").click()
+    greeting = card.locator('input[data-key="greeting"]')
+    assert greeting.get_attribute("type") == "text"
+    assert greeting.input_value() == "¡Hola!"
+    # desde localhost se puede instalar; nada de JSON a la vista
+    assert page.locator("#plgInstallBox").is_visible()
+    assert page.locator("#plg textarea").count() == 0 or "{" not in page.locator(
+        "#plg textarea").first.input_value()
+    sizes = page.evaluate("(() => { const p = document.getElementById('plg');"
+                          " return [p.scrollWidth, p.clientWidth]; })()")
+    ctx.close()
+    assert sizes[0] <= sizes[1] + 1, f"la vista de plugins se desborda: {sizes}"
+    assert not errors, errors

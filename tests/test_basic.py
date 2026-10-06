@@ -220,3 +220,26 @@ def test_export_without_secrets_and_import(client):
     assert cfg["pluginSettings"]["obs"]["password"] == "SECRETO"   # se conservan
     r = client.post("/basic/edit/import", data={"json": "{\"pages\": []}"})
     assert main.load_config()["name"] == "Importado"               # inválido: no se aplica
+
+
+def test_editor_fields_without_json(client):
+    """El editor básico muestra campos por esquema y guarda sin escribir JSON."""
+    t = client.get("/basic/edit/item?page=nb_a&id=nb_tap").text
+    assert 'class="b-adv"' in t                         # JSON plegado en "Avanzado"
+    # 1º se elige la acción; al guardar aparecen sus campos
+    client.post("/basic/edit/item", data={
+        "page": "nb_a", "id": "nb_tap", "label": "Web", "type": "button", "w": "1", "h": "1",
+        "action": "power", "params": "", "params__orig": "", "longAction": "",
+        "longParams": "", "longParams__orig": "", "when": "", "when__orig": ""})
+    t = client.get("/basic/edit/item?page=nb_a&id=nb_tap").text
+    assert 'name="pf_mode"' in t and 'name="pf_delay_s"' in t
+    # 2º se rellenan los campos
+    client.post("/basic/edit/item", data={
+        "page": "nb_a", "id": "nb_tap", "label": "Apagar", "type": "button", "w": "1", "h": "1",
+        "action": "power", "pf_action": "power", "pf_mode": "sleep", "pf_delay_s": "30",
+        "params": "", "params__orig": "", "longAction": "", "longParams": "",
+        "longParams__orig": "", "w_key": "t.on", "w_label": "Activo", "w_equals": "",
+        "w_icon": "", "w_color": "#ff0000", "when": "", "when__orig": ""})
+    b = _page("nb_a")["buttons"][0]
+    assert b["params"] == {"mode": "sleep", "delay_s": 30}
+    assert b["when"] == {"key": "t.on", "label": "Activo"}

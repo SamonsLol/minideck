@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    {
+      "id": "hello",
+      "name": "Hola mundo",
+      "description": "Plantilla de plugin: una acción, una fuente de estado, un widget y un ajuste.",
+      "author": "Samons",
+      "url": "https://github.com/SamonsLol/minideck/tree/main/examples/plugins/hello",
+      "platforms": []
+    }
+  ]
+}

@@ -17,7 +17,19 @@ Carpeta de datos según el sistema:
 
 Si un plugin de usuario tiene el mismo `id` que uno incluido, **gana el del usuario** (así puedes personalizar uno existente). El `id` es el nombre de la carpeta: minúsculas, números, `-` y `_`.
 
-Instalar un plugin = copiar su carpeta ahí y reiniciar MiniDeck.
+Instalar un plugin = copiar su carpeta ahí y reiniciar MiniDeck (o usar el Panel, ver abajo).
+
+## Instalar desde el Panel
+
+Abre el Panel (`/panel.html`) **en el propio equipo** y pulsa **🧩 Plugins**:
+
+- **Instalar plugin**: pega la dirección y pulsa *Instalar*. Vale un repo de GitHub (`https://github.com/usuario/minideck-algo`), una carpeta de un repo (`https://github.com/usuario/repo/tree/main/plugins/algo`) o un enlace directo a un `.zip` (solo `https://`, máx. 10 MB). El plugin se instala en la carpeta de datos y **funciona al momento**, sin reiniciar. Si declara dependencias (`requires`), el Panel ofrece instalarlas con un clic (eso sí requiere reiniciar).
+- **Explorar**: catálogo de la comunidad ([`docs/plugins.json`](plugins.json)), con botón *Instalar* en cada uno.
+- **Instalados**: estado de cada plugin, activar/desactivar (se aplica al reiniciar), *Desinstalar* (solo plugins de usuario) y **Ajustes**: un formulario generado a partir de `settings` del `plugin.json` (casillas, números, listas una por línea y contraseñas ocultas), sin editar JSON.
+
+Instalar y desinstalar solo funcionan desde el propio equipo (`localhost`): desde el móvil puedes cambiar ajustes pero no instalar código. Los plugins de la tienda no pueden reemplazar a uno incluido con MiniDeck (mismo `id`).
+
+> Un plugin es código que se ejecuta en tu equipo. Instala solo plugins de autores en los que confíes.
 
 ## Anatomía
 
@@ -124,7 +136,7 @@ Cualquier botón del deck puede reaccionar a tu estado sin escribir JavaScript:
 
 ## Ajustes
 
-Los valores por defecto van en `plugin.json` → `settings`. El usuario los cambia en su `deck.json`:
+Los valores por defecto van en `plugin.json` → `settings`. El usuario los cambia desde el Panel (**🧩 Plugins → Ajustes**, el formulario se genera según el tipo de cada valor por defecto: `true/false` → casilla, número, lista de textos o texto; las claves que contienen `token`, `password`, `secret` o `apikey` se tratan como contraseñas y nunca se muestran) o a mano en su `deck.json`:
 
 ```json
 {
@@ -209,4 +221,4 @@ Esto no es asesoramiento legal.
 
 1. Crea un repo `minideck-<id>` con la carpeta del plugin, un `LICENSE` (AGPL-3.0-or-later) y un README con capturas.
 2. Añade el topic `minideck-plugin` en GitHub para que la comunidad lo encuentre.
-3. Abre un PR añadiéndolo a [`docs/PLUGIN_INDEX.md`](PLUGIN_INDEX.md).
+3. Abre un PR añadiéndolo a [`docs/PLUGIN_INDEX.md`](PLUGIN_INDEX.md) y a [`docs/plugins.json`](plugins.json) (así aparece en «🧩 Plugins → Explorar» del Panel).

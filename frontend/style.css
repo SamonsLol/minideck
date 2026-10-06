@@ -1208,3 +1208,31 @@ a.icon-btn.about-link {
 @media (max-width: 350px) {
   #profileBtn { display: none; }
 }
+
+/* ------------------------------------------------ formularios sin JSON */
+.pf { display: flex; flex-direction: column; gap: 10px; }
+.pf-row { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.pf-row > label { font-size: 12.5px; font-weight: 550; color: var(--muted); }
+.pf-row input:not([type="range"]):not([type="checkbox"]):not([type="color"]),
+.pf-row select, .pf-row textarea {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); padding: 10px 12px; font-size: 15px; width: 100%; min-width: 0;
+  font-family: var(--font); -webkit-user-select: text; user-select: text;
+}
+.pf-row textarea.pf-json { font-family: var(--mono); font-size: 13px; }
+.pf-num { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pf-num input[type="range"] { flex: 1; min-width: 0; accent-color: var(--text); }
+.pf-num input[type="number"] { width: 88px !important; flex: none; }
+.pf-num input[type="color"] { width: 54px; height: 36px; border: 1px solid var(--border);
+  border-radius: 8px; background: none; padding: 2px; }
+.pf-num input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--text); }
+.pf-help { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.pf-err { font-size: 12px; color: var(--err); }
+.pf-empty { font-size: 13px; color: var(--muted); }
+.f-adv, .f-when-box { border: 1px dashed var(--border); border-radius: 12px; padding: 8px 12px; }
+.f-adv > summary, .f-when-box > summary {
+  cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 2px 0;
+}
+.f-adv[open] > summary, .f-when-box[open] > summary { margin-bottom: 10px; }
+.f-when-box .f-adv { margin-top: 10px; }
+.row-long-params { display: flex; flex-direction: column; gap: 10px; }

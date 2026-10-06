@@ -67,6 +67,12 @@ _T = {
         "ed.confirm_page": "Se eliminará la página y todos sus botones.",
         "saved": "Guardado ✓", "badjson": "JSON inválido en «{f}»: {e}",
         "lang": "English",
+        "ed.advanced": "Avanzado (JSON)", "ed.default": "— por defecto —",
+        "ed.yes": "Sí", "ed.no": "No", "ed.lines": "uno por línea",
+        "ed.newaction": "Pulsa Guardar para ver los campos de la acción elegida.",
+        "ed.wkey": "Dato en vivo (p. ej. obs.recording)", "ed.wequals": "Cuando valga (opcional)",
+        "ed.wlabel": "Texto cuando esté activo", "ed.wicon": "Icono cuando esté activo",
+        "ed.wcolor": "Usar este color cuando esté activo", "ed.back": "← Volver a la página anterior",
     },
     "en": {
         "pair.title": "Pair MiniDeck", "pair.help":
@@ -92,7 +98,32 @@ _T = {
         "ed.confirm_page": "The page and all its buttons will be deleted.",
         "saved": "Saved ✓", "badjson": "Invalid JSON in “{f}”: {e}",
         "lang": "Español",
+        "ed.advanced": "Advanced (JSON)", "ed.default": "— default —",
+        "ed.yes": "Yes", "ed.no": "No", "ed.lines": "one per line",
+        "ed.newaction": "Press Save to see the fields of the selected action.",
+        "ed.wkey": "Live value (e.g. obs.recording)", "ed.wequals": "When it equals (optional)",
+        "ed.wlabel": "Text while active", "ed.wicon": "Icon while active",
+        "ed.wcolor": "Use this color while active", "ed.back": "← Back to the previous page",
     },
+}
+
+
+_PARAM_LABELS = {
+    "es": {"keys": "Teclas", "text": "Texto", "path": "Ruta (archivo o carpeta)",
+           "app": "Aplicación", "args": "Argumentos", "cmd": "Comando", "shell": "Consola",
+           "url": "Dirección web", "level": "Volumen", "delta": "Cuánto sube o baja",
+           "mute": "Silenciar", "mode": "Modo", "delay_s": "Retraso (segundos)", "name": "Nombre",
+           "x": "Posición X", "y": "Posición Y", "clicks": "Clics", "button": "Botón del ratón",
+           "steps": "Pasos", "method": "Método", "scene": "Escena", "input": "Fuente de audio",
+           "entity_id": "Entidad", "domain": "Dominio", "service": "Servicio", "page": "Página",
+           "position": "Posición (segundos)"},
+    "en": {"keys": "Keys", "text": "Text", "path": "Path (file or folder)", "app": "App",
+           "args": "Arguments", "cmd": "Command", "shell": "Shell", "url": "Web address",
+           "level": "Volume", "delta": "Step up/down", "mute": "Mute", "mode": "Mode",
+           "delay_s": "Delay (seconds)", "name": "Name", "x": "X position", "y": "Y position",
+           "clicks": "Clicks", "button": "Mouse button", "steps": "Steps", "method": "Method",
+           "scene": "Scene", "input": "Audio source", "entity_id": "Entity", "domain": "Domain",
+           "service": "Service", "page": "Page", "position": "Position (seconds)"},
 }
 
 
@@ -616,6 +647,124 @@ async def basic_edit_item(req: Request, page: str = "", id: str = ""):  # noqa: 
     return _item_form(req, cfg, page, b)
 
 
+def _rules(action: str, values: dict) -> dict:
+    """Reglas de los campos: esquema de la acción + claves ya presentes."""
+    if action == "page":
+        return {"page": {"type": "page", "required": True}}
+    rules = {k: dict(v) for k, v in (_srv.get("action_schema", lambda a: {})(action) or {}).items()
+             if not k.startswith("$")}
+    for k, v in (values or {}).items():
+        if k not in rules:
+            rules[k] = {"type": "bool" if isinstance(v, bool) else
+                        "int" if isinstance(v, int) else "float" if isinstance(v, float) else
+                        "list" if isinstance(v, list) else "dict" if isinstance(v, dict) else "str"}
+    return rules
+
+
+def _simple_list(v) -> bool:
+    return isinstance(v, list) and all(not isinstance(x, (dict, list)) for x in v)
+
+
+def _param_fields(req, prefix: str, action: str, values: dict, cfg) -> str:
+    """Campos de formulario (sin JSON) para los params de `action`."""
+    if not action:
+        return ""
+    labels = _PARAM_LABELS[_lang(req)]
+    out = [f'<input type="hidden" name="{prefix}_action" value="{e(action)}">']
+    for key, r in _rules(action, values).items():
+        name = f"{prefix}_{key}"
+        cur = (values or {}).get(key)
+        lab = e(labels.get(key, key.replace("_", " ").capitalize())) + (" *" if r.get("required") else "")
+        if r.get("type") == "page":
+            opts = _opt("back", cur, _t(req, "ed.back")) + "".join(
+                _opt(p["id"], cur, p.get("name") or p["id"]) for p in cfg.get("pages") or [])
+            field = f'<select name="{name}">{opts}</select>'
+        elif r.get("choices"):
+            opts = ("" if r.get("required") else _opt("", cur if cur is not None else "", _t(req, "ed.default")))
+            opts += "".join(_opt(c, cur) for c in r["choices"])
+            field = f'<select name="{name}">{opts}</select>'
+        elif r.get("type") == "bool":
+            val = "" if cur is None else str(cur).lower()
+            field = (f'<select name="{name}">{_opt("", val, _t(req, "ed.default"))}'
+                     f'{_opt("true", val, _t(req, "ed.yes"))}{_opt("false", val, _t(req, "ed.no"))}</select>')
+        elif r.get("type") in ("int", "float"):
+            mn = f' min="{r["min"]}"' if "min" in r else ""
+            mx = f' max="{r["max"]}"' if "max" in r else ""
+            step = "1" if r["type"] == "int" else "any"
+            field = (f'<input type="number" name="{name}" step="{step}"{mn}{mx} '
+                     f'value="{e("" if cur is None else str(cur))}">')
+        elif r.get("type") == "list" and (cur is None or _simple_list(cur)):
+            txt = "\n".join(map(str, cur or []))
+            field = (f'<textarea name="{name}" rows="3" placeholder="{e(_t(req, "ed.lines"))}">'
+                     f'{e(txt)}</textarea>')
+        elif r.get("type") in ("list", "dict"):
+            continue          # estructuras complejas: solo en "Avanzado"
+        else:
+            field = f'<input name="{name}" value="{e("" if cur is None else str(cur))}">'
+        out.append(f"<label>{lab}{field}</label>")
+    return "".join(out)
+
+
+def _read_fields(f: dict, prefix: str, action: str, base: dict) -> dict:
+    """Params desde los campos del formulario (si eran de esta misma acción)."""
+    if f.get(f"{prefix}_action") != action:
+        return base          # acción nueva: sus campos aparecerán al recargar
+    params = dict(base)
+    for key, r in _rules(action, base).items():
+        name = f"{prefix}_{key}"
+        if name not in f:
+            continue
+        raw = f[name]
+        if raw.strip() == "":
+            params.pop(key, None)
+            continue
+        t = r.get("type")
+        if t == "bool":
+            params[key] = raw == "true"
+        elif t == "int":
+            try:
+                params[key] = int(float(raw))
+            except ValueError:
+                params[key] = raw
+        elif t == "float":
+            try:
+                params[key] = float(raw)
+            except ValueError:
+                params[key] = raw
+        elif t == "list":
+            params[key] = [x.strip() for x in raw.splitlines() if x.strip()]
+        else:
+            params[key] = raw
+    return params
+
+
+def _when_fields(req, when: dict) -> str:
+    w = when or {}
+    color = w.get("color") or "#f87171"
+    checked = " checked" if w.get("color") else ""
+    return (f'<label>{e(_t(req, "ed.wkey"))}<input name="w_key" value="{e(str(w.get("key", "")))}"></label>'
+            f'<label>{e(_t(req, "ed.wequals"))}<input name="w_equals" value="{e("" if "equals" not in w else str(w["equals"]))}"></label>'
+            f'<label>{e(_t(req, "ed.wlabel"))}<input name="w_label" value="{e(str(w.get("label", "")))}"></label>'
+            f'<label>{e(_t(req, "ed.wicon"))}<input name="w_icon" value="{e(str(w.get("icon", "")))}"></label>'
+            f'<div class="b-row"><label class="b-check"><input type="checkbox" name="w_usecolor" value="1"{checked}> '
+            f'{e(_t(req, "ed.wcolor"))}</label><input type="color" name="w_color" value="{e(color)}"></div>')
+
+
+def _read_when(f: dict) -> dict | None:
+    key = (f.get("w_key") or "").strip()
+    if not key:
+        return None
+    w = {"key": key}
+    if (f.get("w_equals") or "").strip():
+        w["equals"] = _coerce(f["w_equals"])
+    for k in ("label", "icon"):
+        if (f.get(f"w_{k}") or "").strip():
+            w[k] = f[f"w_{k}"].strip()
+    if f.get("w_usecolor"):
+        w["color"] = f.get("w_color") or "#f87171"
+    return w
+
+
 def _item_form(req, cfg, page, b, error="") -> HTMLResponse:
     actions = ["", "page"] + list(_srv["list_actions"]())
     kind = b.get("type") or "button"
@@ -623,8 +772,15 @@ def _item_form(req, cfg, page, b, error="") -> HTMLResponse:
     err = f'<p class="b-flash err">{e(error)}</p>' if error else ""
 
     def ta(name, value):
+        """JSON en "Avanzado". Se guarda también el original: si no se toca,
+        manda el formulario; si se edita, manda el JSON."""
         txt = "" if value in (None, {}, "") else json.dumps(value, ensure_ascii=False, indent=2)
-        return f'<textarea name="{name}" rows="3" spellcheck="false">{e(txt)}</textarea>'
+        return (f'<details class="b-adv"><summary>{e(_t(req, "ed.advanced"))}</summary>'
+                f'<textarea name="{name}" rows="3" spellcheck="false">{e(txt)}</textarea></details>'
+                f'<input type="hidden" name="{name}__orig" value="{e(txt)}">')
+
+    act = b.get("action", "")
+    long_act = b.get("longAction", "")
 
     body = (_topbar(req, page, editing=True) + err
             + f"""<main class="b-edit"><h1>✎ {e(b.get("label") or b.get("id", ""))}</h1>
@@ -638,10 +794,16 @@ def _item_form(req, cfg, page, b, error="") -> HTMLResponse:
 <div class="b-row"><label>{e(_t(req, "ed.w"))}<select name="w">{"".join(_opt(v, w) for v in ("1", "2", "3", "full"))}</select></label>
 <label>{e(_t(req, "ed.h"))}<select name="h">{"".join(_opt(v, b.get("h", 1)) for v in range(1, 6))}</select></label></div>
 <label>{e(_t(req, "ed.action"))}<select name="action">{"".join(_opt(a, b.get("action", "")) for a in actions)}</select></label>
-<label>{e(_t(req, "ed.params"))}{ta("params", b.get("params"))}</label>
-<label>{e(_t(req, "ed.longaction"))}<select name="longAction">{"".join(_opt(a, b.get("longAction", "")) for a in actions)}</select></label>
-<label>{e(_t(req, "ed.longparams"))}{ta("longParams", b.get("longParams"))}</label>
-<label>{e(_t(req, "ed.when"))}{ta("when", b.get("when"))}</label>
+<fieldset class="b-fs"><legend>{e(_t(req, "ed.params"))}</legend>
+{_param_fields(req, "pf", act, b.get("params") or {}, cfg)}<small>{e(_t(req, "ed.newaction"))}</small>
+{ta("params", b.get("params"))}</fieldset>
+<label>{e(_t(req, "ed.longaction"))}<select name="longAction">{"".join(_opt(a, long_act) for a in actions)}</select></label>
+<fieldset class="b-fs"><legend>{e(_t(req, "ed.longparams"))}</legend>
+{_param_fields(req, "lp", long_act, b.get("longParams") or {}, cfg)}
+{ta("longParams", b.get("longParams"))}</fieldset>
+<fieldset class="b-fs"><legend>{e(_t(req, "ed.when"))}</legend>
+{_when_fields(req, b.get("when"))}
+{ta("when", b.get("when"))}</fieldset>
 <div class="b-row"><button class="b-primary">{e(_t(req, "ed.save"))}</button>
 <a class="b-mini" href="/basic/edit?page={quote(page)}">{e(_t(req, "ed.cancel"))}</a></div>
 </form></main>""")
@@ -671,12 +833,22 @@ async def basic_edit_item_save(req: Request):
     _p, b = _find(cfg, f.get("id", ""))
     if b is None:
         return _back(f.get("page", ""), "?", ok=False, base="/basic/edit")
+    def edited(name):
+        return (f.get(name) or "").strip() != (f.get(name + "__orig") or "").strip()
     try:
         params = _json_field(req, f, "params", {})
         long_params = _json_field(req, f, "longParams", {})
         when = _json_field(req, f, "when", None)
     except ValueError as exc:
         return _item_form(req, cfg, f.get("page", ""), b, str(exc))
+    # el formulario manda, salvo que se haya editado el JSON de "Avanzado"
+    if not edited("params"):
+        params = _read_fields(f, "pf", f.get("action", ""), params if isinstance(params, dict) else {})
+    if not edited("longParams"):
+        long_params = _read_fields(f, "lp", f.get("longAction", ""),
+                                   long_params if isinstance(long_params, dict) else {})
+    if not edited("when") and "w_key" in f:
+        when = _read_when(f)
     b["label"] = f.get("label", "").strip()
     b["icon"] = f.get("icon", "").strip()
     b["color"] = f.get("color") or "#8a93a3"

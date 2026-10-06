@@ -31,6 +31,7 @@ from fastapi.staticfiles import StaticFiles
 import auth
 import basic
 import icons
+import plugin_store
 from actions import (
     META,
     OWNERS,
@@ -714,10 +715,13 @@ basic.configure(
     collect_state=lambda: collect_state(),       # buscada al llamar (tests)
     restore_backup=restore_backup,
     list_actions=lambda: sorted(n for n, m in META.items() if not m["state"]),
+    action_schema=lambda name: (META.get(name) or {}).get("schema") or {},
     plugin_widget_types=lambda: [pid for pid, p in PLUGINS.items()
                                  if p.get("status") == "loaded" and "widget.js" in p["frontend"]],
 )
 app.include_router(basic.router)
+plugin_store.configure(load_config=load_config, save_config=save_config)
+app.include_router(plugin_store.router)
 
 # Frontend (al final para no tapar /ws, /api ni /plugins)
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

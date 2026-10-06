@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Añadido
+- **Editor sin JSON**: los parámetros de cada acción, la pulsación larga y el estado del botón se configuran con campos normales (texto, números con deslizador, desplegables con opciones legibles, sí/no, una lista por líneas) generados a partir del esquema de la acción. Las acciones aparecen con nombre legible («Atajo de teclado · hotkey»). El JSON sigue disponible, plegado, en «Avanzado» y ambos se mantienen sincronizados. También en el editor sin JavaScript (`/basic`).
+- **Plugins de la comunidad desde el Panel** (🧩 Plugins): instalar desde un enlace de GitHub (repo o carpeta) o un `.zip`, o desde el catálogo `docs/plugins.json`; desinstalar; activar/desactivar; y **ajustes con formulario** (contraseñas y tokens como campos ocultos, sin JSON). Instalar y desinstalar solo desde el propio equipo; descargas solo por https, con límites de tamaño y protección contra rutas maliciosas en el zip. El plugin funciona al instante, sin reiniciar.
+
 ### Corregido
 - Con muchos widgets en una página se **aplastaban** para caber en la pantalla. Ahora cada fila tiene una altura mínima (70–112 px según la pantalla) y la rejilla **hace scroll**; con pocos widgets siguen ocupando toda la pantalla.
 - Menos **espacio entre widgets** (12 px por defecto, y menor en móviles).
