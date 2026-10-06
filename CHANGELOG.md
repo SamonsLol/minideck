@@ -8,6 +8,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - **Licencia: de MIT a AGPL-3.0-or-later.** Cabeceras SPDX en todos los archivos de código.
 - Enlace «Acerca de» (licencia + código fuente) en la interfaz, en `/qr` y en `/api/info` (AGPL §13).
 - README principal en inglés (`README.md`) y versión en español (`README.es.md`).
+- Capturas de pantalla en `docs/screenshots/`.
+
+### Corregido
+- El widget *Now Playing* se desbordaba sobre la columna vecina en móviles estrechos (título cortado, barra de progreso fuera de la celda).
 
 ## [1.0.0] - 2026-10-05
 

@@ -11,6 +11,17 @@ Turn your phone into a **Stream Deck** for your PC or Mac. There's no app to ins
 
 Issues and PRs are welcome in English or Spanish.
 
+<p align="center">
+  <img src="docs/screenshots/home.png" width="200" alt="Home page with Now Playing, buttons and per-app mixer">
+  <img src="docs/screenshots/page-multimedia.png" width="200" alt="Media page">
+  <img src="docs/screenshots/editor.png" width="200" alt="Visual editor">
+  <img src="docs/screenshots/theme-lcd.png" width="200" alt="LCD theme">
+</p>
+<p align="center">
+  <img src="docs/screenshots/pairing.png" width="200" alt="Pairing screen">
+  <img src="docs/screenshots/panel.png" width="560" alt="Custom widget Control Panel">
+</p>
+
 ## Features
 
 - **Buttons** for keyboard shortcuts, opening apps and websites, shell commands, macros, webhooks (n8n, Home Assistant…), shutdown/lock, and more.

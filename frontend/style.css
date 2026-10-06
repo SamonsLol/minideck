@@ -422,6 +422,27 @@ body {
 .np-lyrics { width: 38px; height: 38px; flex-shrink: 0; }
 .np-lyrics img { width: 19px; height: 19px; }
 
+/* Nunca desbordar la celda: el <input range> y los flex tienen ancho mínimo
+   intrínseco y, sin esto, invaden la columna vecina en móviles estrechos. */
+.np-widget { min-width: 0; overflow: hidden; container-type: inline-size; }
+.np-main, .np-seek-row, .np-controls { min-width: 0; }
+.np-seek { min-width: 0; width: 100%; }
+.np-btn { flex-shrink: 0; }
+
+/* Widget estrecho (p. ej. 2 columnas en un iPhone): disposición compacta */
+@container (max-width: 230px) {
+  .np-widget { padding: 12px; }
+  .np-main { flex-wrap: wrap; gap: 8px; }
+  .np-art { width: 100%; height: auto; aspect-ratio: 1; }
+  .np-info { flex-basis: calc(100% - 46px); }
+  .np-lyrics { width: 34px; height: 34px; }
+  .np-seek-row { gap: 6px; }
+  .np-time { min-width: 0; font-size: 10px; }
+  .np-controls { gap: 6px; }
+  .np-btn { width: 36px; height: 36px; }
+  .np-big { width: 48px; height: 48px; }
+}
+
 /* ------------------------------------------------ panel de letra (karaoke) */
 .lyrics-panel {
   position: fixed; inset: 0;

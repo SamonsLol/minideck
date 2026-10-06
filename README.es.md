@@ -11,6 +11,17 @@ Convierte tu móvil en un **Stream Deck** para tu PC o Mac. Sin app que instalar
 
 Se aceptan issues y PRs en español o en inglés.
 
+<p align="center">
+  <img src="docs/screenshots/home.png" width="200" alt="Página principal con Now Playing, botones y mezclador por app">
+  <img src="docs/screenshots/page-multimedia.png" width="200" alt="Página Multimedia">
+  <img src="docs/screenshots/editor.png" width="200" alt="Editor visual">
+  <img src="docs/screenshots/theme-lcd.png" width="200" alt="Tema LCD">
+</p>
+<p align="center">
+  <img src="docs/screenshots/pairing.png" width="200" alt="Pantalla de emparejamiento">
+  <img src="docs/screenshots/panel.png" width="560" alt="Panel de Control de widgets personalizados">
+</p>
+
 ## Qué hace
 
 - **Botones** para atajos de teclado, abrir apps/webs, comandos, macros, webhooks (n8n, Home Assistant…), apagar/bloquear, etc.
