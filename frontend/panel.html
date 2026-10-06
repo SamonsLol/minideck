@@ -6,6 +6,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>
+  // aplica el tema de la app (guardado por index.html) antes de pintar
+  function applyTheme() {
+    let t = "";
+    try { t = localStorage.getItem("minideck-theme") || ""; } catch (e) {}
+    if (t) document.documentElement.setAttribute("data-theme", t);
+    else document.documentElement.removeAttribute("data-theme");
+  }
+  applyTheme();
+  addEventListener("storage", (e) => { if (e.key === "minideck-theme") applyTheme(); });
+</script>
 <title>MiniDeck — Panel de Control</title>
 <style>
   :root {
@@ -13,6 +24,14 @@
     --text:#e8ecf2; --muted:#8a93a3; --acc:#60a5fa; --ok:#4ade80; --err:#f87171;
     --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
   }
+  /* mismo tema que la app (botón ◑): LCD claro */
+  :root[data-theme="lcd"] {
+    --bg:#d1d1d1; --surface:#e4e4e2; --surface2:#f4f4f2; --border:#9e9d9d;
+    --text:#2d2d2d; --muted:#6f6f6f; --acc:#2f6fb5; --ok:#2e8b57; --err:#c0392b;
+    color-scheme: light;
+  }
+  /* la vista previa usa los nombres de variable de la app */
+  :root { --surface-2: var(--surface2); --radius: 18px; }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
     background:var(--bg); color:var(--text); height:100vh;

@@ -12,6 +12,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ### Añadido
 - **Escanear el QR desde la propia app** al emparejar: imprescindible en la PWA instalada, que no comparte el token con el navegador. Con HTTPS usa la cámara en vivo; por HTTP en la red local, una foto del QR (jsQR). El código se verifica con el servidor antes de guardarse.
 
+### Corregido
+- Al salir de pantalla completa con **Esc** (o F11) la barra superior quedaba oculta y no se podía volver a editar ni arrastrar widgets. Ahora Esc también cierra el editor y el buscador de iconos, y en escritorio hay un botón ✕ visible en modo inmersivo.
+- El **editor de widgets** y el **Panel de widgets** se quedaban oscuros con el tema LCD: el tema define ya toda la paleta, así que todo lo que usa variables (incluidos widgets de plugins) lo sigue.
+
 ## [1.1.0] - 2026-10-06
 
 ### Añadido

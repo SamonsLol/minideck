@@ -318,3 +318,81 @@ def test_pair_photo_without_qr(browser, server, tmp_path):
     page.wait_for_function(
         "document.querySelector('#pairing .pair-status').textContent.includes('Acércate')")
     ctx.close()
+
+
+def _ui_a_order():
+    page = next(p for p in main.load_config()["pages"] if p["id"] == "ui_a")
+    return [b["id"] for b in page["buttons"]]
+
+
+def test_drag_to_reorder_with_mouse(browser, server):
+    """En el navegador de escritorio (ratón) se puede arrastrar para reordenar."""
+    before = _ui_a_order()
+    ctx = browser.new_context(viewport={"width": 1100, "height": 800}, locale="es")
+    ctx.add_init_script("localStorage.setItem('minideck-lang', 'es')")
+    page = ctx.new_page()
+    page.goto(server + "/")
+    page.wait_for_selector(".page-tab")
+    page.locator(".page-tab", has_text="UI A").click()
+    page.click("#editBtn")
+    page.wait_for_timeout(400)
+    src = page.locator(f'.key[data-id="{before[0]}"]').bounding_box()
+    dst = page.locator(f'.key[data-id="{before[-1]}"]').bounding_box()
+    page.mouse.move(src["x"] + src["width"] / 2, src["y"] + src["height"] / 2)
+    page.mouse.down()
+    page.wait_for_timeout(450)                      # mantener para empezar a arrastrar
+    page.mouse.move(dst["x"] + dst["width"] / 2, dst["y"] + dst["height"] / 2, steps=25)
+    page.wait_for_timeout(200)
+    page.mouse.up()
+    page.wait_for_timeout(800)
+    after = _ui_a_order()
+    page.click("#editBtn")
+    ctx.close()
+    assert after != before and after[-1] == before[0], (before, after)
+    # dejarlo como estaba para el resto de tests
+    cfg = main.load_config()
+    pg = next(p for p in cfg["pages"] if p["id"] == "ui_a")
+    pg["buttons"].sort(key=lambda b: before.index(b["id"]))
+    main.save_config(cfg)
+
+
+def test_escape_leaves_fullscreen_and_restores_topbar(browser, server):
+    ctx = browser.new_context(viewport={"width": 1100, "height": 800}, locale="es")
+    page = ctx.new_page()
+    page.goto(server + "/")
+    page.wait_for_selector(".page-tab")
+    page.click("#fsBtn")
+    page.wait_for_function("document.body.classList.contains('immersive')")
+    assert page.locator(".topbar").is_hidden()
+    assert page.locator("#fsExit").is_visible()          # salida visible con ratón
+    page.keyboard.press("Escape")
+    page.wait_for_function("!document.body.classList.contains('immersive')")
+    assert page.locator(".topbar").is_visible()
+    # y el botón ✕ también sirve
+    page.click("#fsBtn")
+    page.click("#fsExit")
+    page.wait_for_function("!document.body.classList.contains('immersive')")
+    ctx.close()
+
+
+@pytest.mark.parametrize("path", ["/", "/panel.html"])
+def test_lcd_theme_reaches_editors(browser, server, path):
+    """Con el tema LCD, el editor del deck y el Panel de widgets también son claros."""
+    ctx = browser.new_context(viewport={"width": 1000, "height": 700}, locale="es")
+    ctx.add_init_script("localStorage.setItem('minideck-theme', 'lcd')")
+    page = ctx.new_page()
+    page.goto(server + path)
+    if path == "/":
+        page.wait_for_selector(".page-tab")
+        page.locator(".page-tab", has_text="UI A").click()
+        page.click("#editBtn")
+        page.click('.key[data-id="ui_long"]', force=True)
+        page.wait_for_selector("#editSheet.open")
+        sel = "#editSheet"
+    else:
+        page.wait_for_timeout(500)
+        sel = "body"
+    bg = page.evaluate(f"getComputedStyle(document.querySelector('{sel}')).backgroundColor")
+    rgb = [int(x) for x in bg[bg.index("(") + 1:bg.index(")")].split(",")[:3]]
+    ctx.close()
+    assert sum(rgb) / 3 > 150, f"{path}: fondo oscuro con tema LCD ({bg})"

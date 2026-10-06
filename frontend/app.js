@@ -1825,9 +1825,29 @@ function setImmersive(on) {
     else if (!on && document.fullscreenElement)
       (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
   } catch (e) {}
-  if (on) toast("Desliza hacia abajo para salir", false);
+  if (on) toast(T(matchMedia("(pointer: fine)").matches ? "fs.hintDesktop" : "fs.hint"), false);
 }
 function toggleFullscreen() { setImmersive(!isImmersive()); }
+
+// Si el navegador sale de pantalla completa por su cuenta (Esc, F11, gesto),
+// salir también del modo inmersivo: si no, la barra superior quedaría oculta
+// y no habría forma de volver a editar.
+for (const ev of ["fullscreenchange", "webkitfullscreenchange"]) {
+  document.addEventListener(ev, () => {
+    const fs = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!fs && isImmersive()) setImmersive(false);
+  });
+}
+
+// Esc: cierra lo que esté abierto, de arriba abajo.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const picker = document.querySelector(".icon-picker.open");
+  if (picker) { picker.classList.remove("open"); return; }
+  if ($("editSheet")?.classList.contains("open")) { closeSheet(); return; }
+  if (isImmersive()) { setImmersive(false); return; }
+  if (state.editMode) toggleEdit();
+});
 
 /* ------------------------------------------------ cambiar de página */
 function animateGrid(dir) {

@@ -955,7 +955,19 @@ body {
   --bg: #d1d1d1;           /* fondo de TODO */
   --border: #9e9d9d;
   --radius: 13px;
+  /* Paleta completa: así TODO lo que use variables (hoja de edición, avisos,
+     widgets de plugins…) sigue el tema sin reglas sueltas. */
+  --surface:   #e4e4e2;
+  --surface-2: #f4f4f2;
+  --text:      #2d2d2d;
+  --muted:     #6f6f6f;
+  --err:       #c0392b;
+  --ok:        #2e8b57;
+  color-scheme: light;
 }
+[data-theme="lcd"] .sheet { box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.18); }
+[data-theme="lcd"] .swatch.sel { border-color: #2d2d2d; }
+[data-theme="lcd"] .sheet-close { background: #ffffff; }
 
 /* barra superior, versión y pestañas: gris oscuro sobre el fondo gris */
 [data-theme="lcd"] .brand h1 { color: #3a3a3a; }
@@ -1056,7 +1068,19 @@ body.immersive .topbar,
 body.immersive .pages { display: none; }
 body.immersive .grid { padding-top: calc(12px + env(safe-area-inset-top)); }
 
-.fs-exit { display: none; }   /* botón no usado: la salida es por gesto */
+/* Salir del modo inmersivo: en móvil es por gesto; con ratón (escritorio)
+   hace falta un botón visible, además de Esc. */
+.fs-exit { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  body.immersive .fs-exit {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; top: 12px; right: 12px; z-index: 80;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+    font-size: 15px; cursor: pointer; opacity: 0.55; transition: opacity 0.2s;
+  }
+  body.immersive .fs-exit:hover { opacity: 1; }
+}
 
 /* breve destello del nombre de página al cambiar con dos dedos */
 .page-flash {
