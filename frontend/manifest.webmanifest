@@ -4,7 +4,7 @@
   "description": "Control remoto de tu Mac/PC desde el móvil",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#0f1216",
   "theme_color": "#0f1216",
   "icons": [

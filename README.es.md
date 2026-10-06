@@ -12,13 +12,15 @@ Convierte tu móvil en un **Stream Deck** para tu PC o Mac. Sin app que instalar
 Se aceptan issues y PRs en español o en inglés.
 
 <p align="center">
-  <img src="docs/screenshots/tour.gif" width="280" alt="Recorrido: páginas, carpetas, editor, idioma y temas">
+  <img src="docs/screenshots/tour.gif" width="640" alt="Recorrido: páginas, carpetas, editor, idioma y temas">
 </p>
 <p align="center">
-  <img src="docs/screenshots/home.png" width="190" alt="Página principal con Now Playing, botones y mezclador por app">
-  <img src="docs/screenshots/page-stream.png" width="190" alt="Página de OBS con botones de grabar y directo con estado">
-  <img src="docs/screenshots/editor.png" width="190" alt="Editor visual">
-  <img src="docs/screenshots/theme-lcd.png" width="190" alt="Tema LCD">
+  <img src="docs/screenshots/home.png" width="420" alt="Página principal con Now Playing, botones y mezclador">
+  <img src="docs/screenshots/page-stream.png" width="420" alt="Página de OBS con botones de grabar y directo con estado">
+</p>
+<p align="center">
+  <img src="docs/screenshots/page-multimedia.png" width="420" alt="Página Multimedia">
+  <img src="docs/screenshots/theme-lcd.png" width="420" alt="Tema LCD">
 </p>
 
 ## Qué hace

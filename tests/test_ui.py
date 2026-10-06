@@ -132,9 +132,10 @@ OVERFLOW_JS = """() => {
 }"""
 
 
-@pytest.mark.parametrize("width", [340, 360, 390, 768])
-def test_no_overflow_on_any_page(browser, server, width):
-    ctx, page, errors = _open(browser, server, width=width)
+@pytest.mark.parametrize("width,height", [(340, 700), (360, 780), (390, 844), (768, 1024),
+                                          (844, 390), (1180, 820)])   # vertical y horizontal
+def test_no_overflow_on_any_page(browser, server, width, height):
+    ctx, page, errors = _open(browser, server, width=width, height=height)
     tabs = page.locator(".page-tab")
     problems = {}
     for i in range(tabs.count()):

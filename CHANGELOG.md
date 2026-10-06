@@ -2,6 +2,12 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Cambiado
+- La app instalada (PWA) ya no se bloquea en vertical: gira también en horizontal (`orientation: any`).
+- Capturas y GIF del README en horizontal; tests de desbordamiento también en apaisado (844×390) y tablet.
+
 ## [1.1.0] - 2026-10-06
 
 ### Añadido

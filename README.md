@@ -12,13 +12,15 @@ Turn your phone into a **Stream Deck** for your PC or Mac. There's no app to ins
 Issues and PRs are welcome in English or Spanish.
 
 <p align="center">
-  <img src="docs/screenshots/tour.gif" width="280" alt="Tour: pages, folders, editor, language and themes">
+  <img src="docs/screenshots/tour.gif" width="640" alt="Tour: pages, folders, editor, language and themes">
 </p>
 <p align="center">
-  <img src="docs/screenshots/home.png" width="190" alt="Home page with Now Playing, buttons and per-app mixer">
-  <img src="docs/screenshots/page-stream.png" width="190" alt="OBS page with stateful record and live buttons">
-  <img src="docs/screenshots/editor.png" width="190" alt="Visual editor">
-  <img src="docs/screenshots/theme-lcd.png" width="190" alt="LCD theme">
+  <img src="docs/screenshots/home.png" width="420" alt="Home page with Now Playing, buttons and mixer">
+  <img src="docs/screenshots/page-stream.png" width="420" alt="OBS page with stateful record and live buttons">
+</p>
+<p align="center">
+  <img src="docs/screenshots/page-multimedia.png" width="420" alt="Media page">
+  <img src="docs/screenshots/theme-lcd.png" width="420" alt="LCD theme">
 </p>
 
 ## Features
