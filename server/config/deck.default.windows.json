@@ -2,7 +2,7 @@
   "name": "MiniDeck",
   "grid": {
     "columns": 4,
-    "gap": 16
+    "gap": 12
   },
   "nowplaying": {
     "offset": 0.3

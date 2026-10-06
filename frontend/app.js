@@ -322,7 +322,7 @@ function render() {
   const cfg = state.config;
   $("deckName").textContent = cfg.name || "MiniDeck";
   document.documentElement.style.setProperty("--cols", cfg.grid?.columns ?? 4);
-  document.documentElement.style.setProperty("--gap", `${cfg.grid?.gap ?? 16}px`);
+  document.documentElement.style.setProperty("--gap", `${cfg.grid?.gap ?? 12}px`);
   renderTabs();
   renderGrid();
 }
@@ -1719,6 +1719,12 @@ function onDragMove(e) {
   drag.ghost.style.left = (e.clientX - drag.offX) + "px";
   drag.ghost.style.top = (e.clientY - drag.offY) + "px";
 
+  // cerca del borde de la rejilla: desplazarla para llegar a lo que no se ve
+  const gr = $("grid").getBoundingClientRect();
+  const edge = 56;
+  if (e.clientY < gr.top + edge) $("grid").scrollTop -= 14;
+  else if (e.clientY > gr.bottom - edge) $("grid").scrollTop += 14;
+
   // enfriamiento: tras un reacomodo, exigir movimiento antes del siguiente
   if (Math.hypot(e.clientX - drag.lastIX, e.clientY - drag.lastIY) < 16) return;
 
@@ -1892,7 +1898,9 @@ const _avg = (t, k) => t.length === 2 ? (t[0][k] + t[1][k]) / 2 : t[0][k];
 document.addEventListener("touchstart", (e) => {
   if (state.editMode) { _sw = null; return; }   // no molestar al reordenar
   _sw = { x0: _avg(e.touches, "clientX"), y0: _avg(e.touches, "clientY"),
-          dx: 0, dy: 0, n: e.touches.length };
+          dx: 0, dy: 0, n: e.touches.length,
+          // la rejilla hace scroll: "deslizar abajo para salir" solo si ya está arriba
+          atTop: $("grid").scrollTop <= 0 };
 }, { passive: true });
 
 document.addEventListener("touchmove", (e) => {
@@ -1903,7 +1911,7 @@ document.addEventListener("touchmove", (e) => {
 
 document.addEventListener("touchend", () => {
   if (!_sw) return;
-  const { dx, dy } = _sw;
+  const { dx, dy, atTop } = _sw;
   _sw = null;
   // horizontal → cambiar de página
   if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.3) {
@@ -1913,7 +1921,7 @@ document.addEventListener("touchend", () => {
     return;
   }
   // hacia abajo en pantalla completa → salir
-  if (isImmersive() && dy > 90 && dy > Math.abs(dx) * 1.3) {
+  if (isImmersive() && atTop && dy > 90 && dy > Math.abs(dx) * 1.3) {
     _swiped = true;
     setTimeout(() => { _swiped = false; }, 350);
     setImmersive(false);

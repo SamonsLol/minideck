@@ -2,6 +2,13 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Corregido
+- Con muchos widgets en una página se **aplastaban** para caber en la pantalla. Ahora cada fila tiene una altura mínima (70–112 px según la pantalla) y la rejilla **hace scroll**; con pocos widgets siguen ocupando toda la pantalla.
+- Menos **espacio entre widgets** (12 px por defecto, y menor en móviles).
+- Al arrastrar un widget cerca del borde, la rejilla se desplaza sola; «deslizar hacia abajo para salir» de pantalla completa solo actúa si la rejilla está arriba del todo.
+
 ## [1.2.0] - 2026-10-06
 
 ### Cambiado

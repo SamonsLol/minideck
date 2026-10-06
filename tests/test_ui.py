@@ -447,3 +447,45 @@ def test_browser_posts_are_accepted(browser, server):
     ctx.close()
     assert status == 200
     assert "regresion_origin" in main.load_config().get("customWidgets", {})
+
+
+@pytest.mark.parametrize("width,height", [(390, 844), (844, 390)])
+def test_many_widgets_scroll_instead_of_squashing(browser, server, width, height):
+    """Con muchos widgets, cada uno mantiene una altura usable y la rejilla
+    hace scroll (antes se aplastaban para caber en la pantalla)."""
+    cfg = main.load_config()
+    cfg["pages"] = [p for p in cfg["pages"] if p["id"] != "ui_many"]
+    cfg["pages"].append({"id": "ui_many", "name": "Muchos", "buttons": [
+        {"id": f"m{i}", "label": f"B{i}", "icon": "🎮", "action": "t_ui_tap"} for i in range(40)]})
+    main.save_config(cfg)
+    try:
+        ctx, page, _ = _open(browser, server, width=width, height=height)
+        page.locator(".page-tab", has_text="Muchos").click()
+        page.wait_for_selector('.key[data-id="m39"]', state="attached")
+        heights = page.evaluate("[...document.querySelectorAll('#grid .key')]"
+                                ".map(k => k.getBoundingClientRect().height)")
+        assert min(heights) >= 70, min(heights)
+        grid = page.evaluate("(() => { const g = document.getElementById('grid');"
+                             " return [g.scrollHeight, g.clientHeight]; })()")
+        assert grid[0] > grid[1], "la rejilla debería poder hacer scroll"
+        page.locator('.key[data-id="m39"]').scroll_into_view_if_needed()
+        page.locator('.key[data-id="m39"]').click()
+        page.wait_for_function("document.getElementById('toast').textContent.includes('toque-corto')")
+        ctx.close()
+    finally:
+        cfg = main.load_config()
+        cfg["pages"] = [p for p in cfg["pages"] if p["id"] != "ui_many"]
+        main.save_config(cfg)
+
+
+def test_few_widgets_still_fill_the_screen(browser, server):
+    """Con pocos widgets, las filas siguen repartiéndose toda la altura."""
+    ctx, page, _ = _open(browser, server)
+    page.locator(".page-tab", has_text="UI B").click()            # 1 solo botón
+    page.wait_for_selector('.key[data-id="ui_back"]')
+    grid = page.evaluate("(() => { const g = document.getElementById('grid');"
+                         " return [g.scrollHeight, g.clientHeight]; })()")
+    key_h = page.locator('.key[data-id="ui_back"]').bounding_box()["height"]
+    ctx.close()
+    assert grid[0] <= grid[1] + 1                  # sin scroll
+    assert key_h > 300                             # ocupa la altura disponible
