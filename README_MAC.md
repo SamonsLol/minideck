@@ -218,7 +218,7 @@ Esto crea (o reutiliza) el venv `buildenv/`, instala `requirements-mac.txt`, y c
 > o usa `target_arch universal2` en `build/minideck.spec`.
 
 ### Usarla
-Al abrirla aparece el icono **🎛 en la barra de menú** (arriba a la derecha):
+Al abrirla aparece el icono de la **lamparita en la barra de menú** (arriba a la derecha):
 
 - **Mostrar QR** → ventana con el código QR + la URL. Escanéalo con la **cámara del
   iPhone** → abre la PWA en Safari → *Compartir → Añadir a pantalla de inicio*.

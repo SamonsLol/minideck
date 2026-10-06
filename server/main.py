@@ -650,7 +650,7 @@ async def qr_page():
                if png else '<p style="opacity:.6">(instala "segno" para ver el QR)</p>')
     page = f"""<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MiniDeck QR</title><style>
+<title>MiniDeck QR</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><style>
 body{{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;
 justify-content:center;gap:18px;background:#1f1f1f;color:#eaeaea;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:24px;text-align:center}}

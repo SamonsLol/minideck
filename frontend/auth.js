@@ -68,6 +68,29 @@
     return withToken(`${proto}://${location.host}${path}`);
   }
 
+  let qrLoading = null;
+  function loadQr() {
+    if (window.MiniDeckQR) return Promise.resolve();
+    qrLoading ??= new Promise((res, rej) => {
+      const sc = document.createElement("script");
+      sc.src = "/qrscan.js";
+      sc.onload = res;
+      sc.onerror = () => { qrLoading = null; rej(new Error("qrscan")); };
+      document.head.appendChild(sc);
+    });
+    return qrLoading;
+  }
+
+  // Comprueba el código con el servidor ANTES de guardarlo.
+  async function tryToken(code) {
+    try {
+      const r = await fetch("/api/info", { headers: { "X-MiniDeck-Token": code } });
+      return r.ok;
+    } catch { return false; }
+  }
+
+  const BTN = "padding:13px;border:0;border-radius:10px;font-weight:700;font-size:15px;";
+
   function showPairing(reason) {
     if (document.getElementById("pairing")) return;
     write("");
@@ -77,41 +100,96 @@
     ov.setAttribute("aria-modal", "true");
     ov.style.cssText =
       "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;" +
-      "justify-content:center;padding:24px;background:rgba(10,12,16,.92);" +
+      "justify-content:center;padding:24px;background:#0a0c10;overflow:auto;" +
       "color:#e6e9ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
     ov.innerHTML = `
-      <form style="max-width:360px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center">
+      <form style="max-width:360px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center;margin:auto">
+        <img src="/icons/icon-192.png" alt="" width="64" height="64"
+             style="align-self:center;border-radius:16px">
         <h2 style="margin:0;font-size:20px"></h2>
-        <p style="margin:0;opacity:.75;font-size:14px;line-height:1.45"></p>
+        <p class="pair-reason" style="margin:0;opacity:.75;font-size:14px;line-height:1.45"></p>
         <p class="pair-help" style="margin:0;opacity:.75;font-size:14px;line-height:1.45"></p>
+        <button type="button" class="pair-scan" style="${BTN}background:#60a5fa;color:#0b0f17"></button>
+        <div class="pair-live" style="display:flex;flex-direction:column;gap:8px"></div>
+        <p class="pair-status" role="status" aria-live="polite"
+           style="margin:0;min-height:1.2em;font-size:13.5px;color:#fbbf24"></p>
+        <div class="pair-or" style="opacity:.5;font-size:12px"></div>
         <input name="code" autocomplete="off" autocapitalize="off" spellcheck="false"
-               placeholder="Code" aria-label="Code"
                style="padding:12px;border-radius:10px;border:1px solid #334;background:#151922;
                       color:inherit;font:16px ui-monospace,monospace;text-align:center">
-        <button style="padding:12px;border:0;border-radius:10px;background:#60a5fa;
-                       color:#0b0f17;font-weight:700;font-size:15px"></button>
+        <button type="submit" class="pair-go" style="${BTN}background:#262c36;color:#e6e9ef"></button>
       </form>`;
+    const $q = (sel) => ov.querySelector(sel);
     const qrUrl = `http://localhost:${location.port || 80}/qr`;
-    ov.querySelector("h2").textContent = tr("pair.title", null, "Emparejar MiniDeck");
-    ov.querySelector("p").textContent =
+    $q("h2").textContent = tr("pair.title", null, "Emparejar MiniDeck");
+    $q(".pair-reason").textContent =
       reason || tr("pair.reason", null, "Este dispositivo aún no está autorizado.");
-    // el texto es nuestro; la URL se escapa al ir dentro de <b>
+    // el texto es nuestro; la URL se limpia al ir dentro de <b>
     const safeUrl = qrUrl.replace(/[<>&"]/g, "");
-    ov.querySelector(".pair-help").innerHTML = tr("pair.help", { url: safeUrl },
-      `En el equipo abre <b>${safeUrl}</b> y escanea el QR, o escribe aquí el código de emparejamiento.`);
-    const input = ov.querySelector("input");
+    $q(".pair-help").innerHTML = tr("pair.help", { url: safeUrl },
+      `En el equipo abre <b>${safeUrl}</b> y escanea el QR desde aquí, o escribe el código.`);
+    const scanLabel = () => "📷 " + tr("pair.scan", null, "Escanear QR");
+    $q(".pair-scan").textContent = scanLabel();
+    $q(".pair-or").textContent = tr("pair.or", null, "o escribe el código");
+    const input = $q("input");
     input.placeholder = tr("pair.code", null, "Código");
     input.setAttribute("aria-label", input.placeholder);
-    ov.querySelector("button").textContent = tr("pair.go", null, "Emparejar");
-    ov.querySelector("form").onsubmit = (e) => {
-      e.preventDefault();
-      const code = ov.querySelector("input").value.trim();
+    $q(".pair-go").textContent = tr("pair.go", null, "Emparejar");
+    const status = (msg, ok) => {
+      $q(".pair-status").textContent = msg || "";
+      $q(".pair-status").style.color = ok ? "#4ade80" : "#fbbf24";
+    };
+
+    async function accept(code) {
       if (!code) return;
-      write(code);
-      location.replace(location.pathname);
+      status(tr("pair.checking", null, "Comprobando…"), true);
+      if (await tryToken(code)) {
+        write(code);
+        status(tr("pair.ok", null, "¡Emparejado!"), true);
+        location.replace(location.pathname);
+      } else {
+        status(tr("pair.badCode", null, "Ese código no es de este equipo o ya no es válido."));
+      }
+    }
+
+    let live = null;
+    $q(".pair-scan").onclick = async () => {
+      status("");
+      if (live) { live.stop(); return; }
+      try { await loadQr(); } catch {
+        status(tr("pair.scanFail", null, "No se pudo cargar el lector de QR."));
+        return;
+      }
+      const QR = window.MiniDeckQR;
+      let text;
+      if (QR.canLive()) {
+        // HTTPS / localhost: cámara en vivo
+        $q(".pair-scan").textContent = tr("pair.cancel", null, "Cancelar");
+        live = QR.scanLive($q(".pair-live"));
+        text = await live.promise;
+        live = null;
+        $q(".pair-scan").textContent = scanLabel();
+        if (text === undefined) text = await QR.scanPhoto();   // sin permiso: foto
+      } else {
+        // HTTP en la red local: foto del QR (la cámara en vivo exige HTTPS)
+        status(tr("pair.photoHint", null, "Haz una foto al QR de la pantalla del equipo."), true);
+        text = await QR.scanPhoto();
+      }
+      if (text === null) { status(""); return; }            // cancelado
+      const code = QR.tokenFrom(text);
+      if (!code) {
+        status(tr("pair.notFound", null,
+          "No se leyó ningún QR de MiniDeck. Acércate un poco y vuelve a intentarlo."));
+        return;
+      }
+      input.value = code;
+      accept(code);
+    };
+    $q("form").onsubmit = (e) => {
+      e.preventDefault();
+      accept(input.value.trim());
     };
     document.body.appendChild(ov);
-    ov.querySelector("input").focus();
   }
 
   window.MiniDeckAuth = { token: read, ensure, api, wsUrl, withToken, showPairing };

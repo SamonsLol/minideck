@@ -19,6 +19,8 @@ datas = [
     (os.path.join(ROOT, "frontend"), "frontend"),
     (os.path.join(SERVER, "plugins"), "plugins"),
     (os.path.join(SERVER, "config", "deck.default.macos.json"), "config"),
+    (os.path.join(ROOT, "assets", "menubar-template.png"), "assets"),
+    (os.path.join(ROOT, "assets", "menubar-template@2x.png"), "assets"),
 ]
 
 # Los imports pyobjc/pyautogui son perezosos y las acciones/plugins se cargan

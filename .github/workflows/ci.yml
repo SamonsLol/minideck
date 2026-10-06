@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install fastapi "uvicorn[standard]" psutil segno pytest httpx playwright
+      - run: pip install fastapi "uvicorn[standard]" psutil segno pytest httpx playwright pillow
       - run: python -m playwright install --with-deps chromium
       - run: pytest -q tests/test_ui.py
 

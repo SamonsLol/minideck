@@ -262,3 +262,59 @@ def test_export_never_includes_plugin_secrets(browser, server):
     ctx.close()
     assert "SECRETO" not in text and "pluginSettings" not in text
     assert '"pages"' in text
+
+
+def _qr_png(tmp_path, text, name="qr.png"):
+    import segno
+    path = tmp_path / name
+    segno.make(text, error="m").save(str(path), scale=8, border=4)
+    return path
+
+
+def _unpaired(browser, server):
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, locale="es")
+    ctx.add_init_script("localStorage.setItem('minideck-lang', 'es')")
+    page = ctx.new_page()
+    page.route("**/api/pair", lambda r: r.fulfill(status=403, body="{}"))  # "otro móvil"
+    page.goto(server + "/")
+    page.wait_for_selector("#pairing .pair-scan")
+    return ctx, page
+
+
+def test_pair_by_scanning_qr_photo(browser, server, tmp_path):
+    """La PWA instalada no comparte el token con el navegador: se empareja
+    escaneando el QR desde la propia app (foto → jsQR)."""
+    qr = _qr_png(tmp_path, f"http://192.168.1.50:8765/?token={main.auth.TOKEN}")
+    ctx, page = _unpaired(browser, server)
+    with page.expect_file_chooser() as fc:
+        page.click("#pairing .pair-scan")
+    fc.value.set_files(str(qr))
+    page.wait_for_selector("#pairing", state="detached", timeout=15000)
+    assert page.evaluate("localStorage.getItem('minideck-token')") == main.auth.TOKEN
+    page.wait_for_function("document.getElementById('statusDot').classList.contains('connected')")
+    ctx.close()
+
+
+def test_pair_rejects_qr_from_other_computer(browser, server, tmp_path):
+    qr = _qr_png(tmp_path, "http://10.0.0.9:8765/?token=token-de-otro-equipo", "otro.png")
+    ctx, page = _unpaired(browser, server)
+    with page.expect_file_chooser() as fc:
+        page.click("#pairing .pair-scan")
+    fc.value.set_files(str(qr))
+    page.wait_for_function(
+        "document.querySelector('#pairing .pair-status').textContent.includes('no es de este')")
+    assert page.evaluate("localStorage.getItem('minideck-token')") in (None, "")
+    ctx.close()
+
+
+def test_pair_photo_without_qr(browser, server, tmp_path):
+    from PIL import Image
+    blank = tmp_path / "blank.png"
+    Image.new("RGB", (400, 300), "white").save(blank)
+    ctx, page = _unpaired(browser, server)
+    with page.expect_file_chooser() as fc:
+        page.click("#pairing .pair-scan")
+    fc.value.set_files(str(blank))
+    page.wait_for_function(
+        "document.querySelector('#pairing .pair-status').textContent.includes('Acércate')")
+    ctx.close()

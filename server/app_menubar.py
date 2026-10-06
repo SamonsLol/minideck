@@ -141,10 +141,21 @@ def set_login_item(enable: bool):
              '(every login item whose name is "MiniDeck")'], check=False)
 
 
+def _asset(name: str) -> str | None:
+    """Ruta de un recurso de assets/ (en el .app están en sys._MEIPASS)."""
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+    path = base / "assets" / name
+    return str(path) if path.exists() else None
+
+
 # ----------------------------------------------------------------- menú -----
 class MiniDeckApp(rumps.App):
     def __init__(self):
-        super().__init__("MiniDeck", title="🎛", quit_button=None)
+        # icono de la lamparita como "plantilla": macOS lo pinta claro u oscuro
+        # según la barra de menú (como los iconos del sistema)
+        icon = _asset("menubar-template.png")
+        super().__init__("MiniDeck", title=None if icon else "MiniDeck", icon=icon,
+                         template=True, quit_button=None)
         self._login = rumps.MenuItem("Arrancar al iniciar sesión",
                                      callback=self.on_login)
         self._login.state = is_login_item()

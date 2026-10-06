@@ -7,6 +7,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ### Cambiado
 - La app instalada (PWA) ya no se bloquea en vertical: gira también en horizontal (`orientation: any`).
 - Capturas y GIF del README en horizontal; tests de desbordamiento también en apaisado (844×390) y tablet.
+- **Nuevo icono**: la lamparita (lucide `lamp-desk`) en la web, la PWA, el favicon, el `.exe`, la app de Mac y su barra de menú. Se eliminan imágenes antiguas sin uso.
+
+### Añadido
+- **Escanear el QR desde la propia app** al emparejar: imprescindible en la PWA instalada, que no comparte el token con el navegador. Con HTTPS usa la cámara en vivo; por HTTP en la red local, una foto del QR (jsQR). El código se verifica con el servidor antes de guardarse.
 
 ## [1.1.0] - 2026-10-06
 
