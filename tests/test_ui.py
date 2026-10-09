@@ -87,11 +87,7 @@ def browser():
     channel = os.environ.get("MINIDECK_TEST_BROWSER") or None
     with pw.sync_playwright() as p:
         try:
-            # cámara simulada para el test de la webcam del móvil; el permiso
-            # solo se concede donde se pide (permissions=["camera"]), así el
-            # escáner de QR del resto de tests sigue usando la foto
-            b = p.chromium.launch(channel=channel,
-                                  args=["--use-fake-device-for-media-stream"])
+            b = p.chromium.launch(channel=channel)
         except Exception as exc:  # noqa: BLE001
             pytest.skip(f"navegador no disponible: {exc}")
         yield b
@@ -560,6 +556,23 @@ def test_panel_plugins_view(browser, server, width, height):
     assert not errors, errors
 
 
+# Cámara simulada igual en todos los navegadores y sistemas (CI incluido):
+# getUserMedia devuelve el vídeo de un canvas animado.
+FAKE_CAMERA = """
+navigator.mediaDevices.getUserMedia = async () => {
+  const c = document.createElement('canvas');
+  c.width = 640; c.height = 360;
+  const g = c.getContext('2d');
+  let n = 0;
+  setInterval(() => {
+    g.fillStyle = '#0a6'; g.fillRect(0, 0, 640, 360);
+    g.fillStyle = '#fff'; g.fillRect((n++ * 8) % 640, 150, 60, 60);
+  }, 33);
+  return c.captureStream(30);
+};
+"""
+
+
 def test_phone_as_webcam(browser, server):
     """El móvil abre la cámara, transmite y el PC recibe los fotogramas
     (localhost es contexto seguro; Chromium usa una cámara simulada)."""
@@ -571,9 +584,9 @@ def test_phone_as_webcam(browser, server):
         {"id": "cam", "type": "phonecam", "label": "Webcam", "icon": "lucide:webcam"}]})
     main.save_config(cfg)
     try:
-        ctx = browser.new_context(viewport={"width": 390, "height": 844}, locale="es",
-                                  permissions=["camera"])
+        ctx = browser.new_context(viewport={"width": 390, "height": 844}, locale="es")
         ctx.add_init_script("localStorage.setItem('minideck-lang', 'es')")
+        ctx.add_init_script(FAKE_CAMERA)
         page = ctx.new_page()
         page.goto(server + "/")
         page.wait_for_selector(".page-tab")
