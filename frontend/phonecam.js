@@ -14,6 +14,8 @@
   const cam = {
     stream: null, ws: null, running: false, timer: null, wake: null,
     facing: "user", quality: "720p", fps: 24, sent: 0, lastSent: 0, shown: 0,
+    rot: 0,          // giro manual extra (0/90/180/270)
+    physical: null,  // orientación física según el sensor (0/90/180/270)
   };
 
   function el(tag, cls, text) {
@@ -72,6 +74,7 @@
         <div class="pc-msg" hidden><strong></strong><p></p></div></div>
       <div class="pc-ctl">
         <button type="button" class="pc-flip"></button>
+        <button type="button" class="pc-rot"></button>
         <select class="pc-q" aria-label="quality"></select>
         <select class="pc-fps" aria-label="fps"></select>
         <button type="button" class="pc-go"></button>
@@ -79,6 +82,7 @@
       <p class="pc-help"></p>`;
     p.querySelector(".pc-head strong").textContent = T("pc.title");
     p.querySelector(".pc-flip").textContent = "⟲ " + T("pc.flip");
+    p.querySelector(".pc-rot").onclick = () => { cam.rot = (cam.rot + 90) % 360; paintPanel(); };
     const q = p.querySelector(".pc-q");
     for (const k of Object.keys(QUALITY)) q.append(new Option(k, k, false, k === cam.quality));
     const f = p.querySelector(".pc-fps");
@@ -109,6 +113,7 @@
     const go = panel.querySelector(".pc-go");
     go.textContent = cam.running ? "■ " + T("pc.stop") : "● " + T("pc.start");
     go.classList.toggle("on", cam.running);
+    panel.querySelector(".pc-rot").textContent = "↻ " + T("pc.rotate") + (cam.rot ? ` ${cam.rot}°` : "");
     const live = panel.querySelector(".pc-live");
     live.hidden = !cam.running;
     live.textContent = `● ${T("pc.live")} · ${cam.shown} fps`;
@@ -148,6 +153,7 @@
   /* ---------------------------------------------- envío */
   function startSending() {
     if (!cam.stream) return;
+    watchOrientation();
     const ws = new WebSocket(MiniDeckAuth.wsUrl("/phonecam/ws"));
     ws.binaryType = "arraybuffer";
     cam.ws = ws;
@@ -183,6 +189,44 @@
     paintPanel();
   }
 
+  /* ---------------------------------------------- orientación
+     Los navegadores giran los fotogramas de la cámara según la orientación de
+     la PANTALLA. Con la rotación automática bloqueada (o si el navegador no lo
+     hace), el celular en horizontal enviaría la imagen de lado: se compara la
+     orientación física (sensor) con la de la pantalla y se corrige al dibujar. */
+  let watching = false;
+  async function watchOrientation() {
+    if (watching) return;
+    try {   // iOS pide permiso (debe llamarse desde un toque: el botón Transmitir)
+      if (typeof DeviceOrientationEvent?.requestPermission === "function" &&
+          await DeviceOrientationEvent.requestPermission() !== "granted") return;
+    } catch { return; }
+    watching = true;
+    window.addEventListener("deviceorientation", (e) => {
+      if (e.beta == null || e.gamma == null) return;
+      const b = e.beta, g = e.gamma;
+      if (Math.abs(g) > 60) cam.physical = g < 0 ? 90 : 270;       // de lado
+      else if (Math.abs(b) > 45) cam.physical = b > 0 ? 0 : 180;   // de pie / al revés
+      // casi plano: se mantiene la última
+    });
+  }
+
+  function screenAngle() {
+    const a = screen.orientation?.angle ?? window.orientation ?? 0;
+    return ((a % 360) + 360) % 360;
+  }
+
+  /** Grados (sentido horario) a girar el fotograma antes de enviarlo. */
+  function frameRotation() {
+    let r = 0;
+    if (cam.physical != null) {
+      const delta = (cam.physical - screenAngle() + 360) % 360;
+      // la cámara frontal da la imagen sin espejo: el giro va al revés
+      r = cam.facing === "user" ? delta : (360 - delta) % 360;
+    }
+    return (r + cam.rot) % 360;
+  }
+
   const canvas = document.createElement("canvas");
   let fpsWindow = [];
   function tick() {
@@ -191,9 +235,16 @@
     const ws = cam.ws;
     // control de flujo: si la red va lenta, no acumular fotogramas
     if (ws && ws.readyState === 1 && ws.bufferedAmount < 400_000 && v.videoWidth) {
-      canvas.width = v.videoWidth;
-      canvas.height = v.videoHeight;
-      canvas.getContext("2d").drawImage(v, 0, 0);
+      const vw = v.videoWidth, vh = v.videoHeight;
+      const rot = frameRotation();
+      const side = rot === 90 || rot === 270;
+      canvas.width = side ? vh : vw;
+      canvas.height = side ? vw : vh;
+      const g = canvas.getContext("2d");
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.translate(canvas.width / 2, canvas.height / 2);
+      g.rotate((rot * Math.PI) / 180);
+      g.drawImage(v, -vw / 2, -vh / 2);
       canvas.toBlob((b) => {
         if (b && cam.ws === ws && ws.readyState === 1) {
           ws.send(b);
@@ -201,7 +252,7 @@
           fpsWindow = fpsWindow.filter((t) => now - t < 1000).concat(now);
           cam.shown = fpsWindow.length;
           const live = panel.querySelector(".pc-live");
-          if (live) live.textContent = `● ${T("pc.live")} · ${cam.shown} fps · ${v.videoWidth}×${v.videoHeight}`;
+          if (live) live.textContent = `● ${T("pc.live")} · ${cam.shown} fps · ${canvas.width}×${canvas.height}`;
         }
       }, "image/jpeg", cam.quality === "1080p" ? 0.7 : 0.75);
     }

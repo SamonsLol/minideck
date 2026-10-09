@@ -2,6 +2,15 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Añadido
+- **Webcam: la imagen gira con el celular.** Si la rotación automática está bloqueada (o el navegador no gira los fotogramas), MiniDeck usa el sensor de orientación y envía la imagen derecha al poner el celular en horizontal. Nuevo botón **↻ Rotar** para corregirla a mano.
+- Aviso cuando el celular no confía en el certificado HTTPS (sin él, la app instalada sale con un icono genérico y la cámara no funciona). Script `build/make_cert.ps1` para generar el certificado en Windows.
+
+### Corregido
+- Icono de la app instalada por HTTPS: iconos `any` y `maskable` separados, `id`/`scope` en el manifiesto y URLs nuevas para que el celular no use un icono guardado.
+
 ## [1.4.0] - 2026-10-09
 
 ### Añadido

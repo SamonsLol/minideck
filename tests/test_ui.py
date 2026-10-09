@@ -604,6 +604,21 @@ def test_phone_as_webcam(browser, server):
         assert phonecam.hub.frame and phonecam.hub.frame.startswith(bytes([0xFF, 0xD8]))
         assert phonecam.hub.width > 0
         assert "EN VIVO" in page.locator(".pc-key .pc-badge").inner_text()
+        assert (phonecam.hub.width, phonecam.hub.height) == (640, 360)
+
+        def wait_size(w, h):
+            for _ in range(100):
+                if (phonecam.hub.width, phonecam.hub.height) == (w, h):
+                    return
+                page.wait_for_timeout(50)
+            raise AssertionError((phonecam.hub.width, phonecam.hub.height))
+
+        # celular de lado con la rotación bloqueada (pantalla a 0°): se gira
+        page.evaluate("""window.dispatchEvent(Object.assign(new Event('deviceorientation'),
+                         {alpha: 0, beta: 5, gamma: -80}))""")
+        wait_size(360, 640)
+        page.click(".pc-rot")                                 # giro manual +90°
+        wait_size(640, 360)
         page.click(".pc-go")                                  # detener
         page.wait_for_selector(".pc-live", state="hidden")
         page.click(".pc-close")
