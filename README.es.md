@@ -166,6 +166,8 @@ Añade el widget **Webcam** (viene en la página *Stream* por defecto), tócalo 
 | `http://localhost:8765/phonecam/stream.mjpg` | flujo MJPEG para programas que lo acepten (VLC, etc.) |
 | `http://localhost:8765/phonecam/snapshot.jpg` | último fotograma |
 
+**OBS automático:** con el servidor WebSocket de OBS activado (ver el plugin OBS), pulsa **Añadir a OBS** en el panel de la webcam: MiniDeck crea la fuente de navegador *MiniDeck Webcam* en la escena actual, la ajusta al lienzo y enciende la cámara virtual. Es la acción `obs_phonecam_setup`, que también puedes poner en cualquier botón.
+
 Desde el móvil eliges cámara frontal/trasera, 480p/720p/1080p y 15/24/30 fps; la pantalla no se apaga mientras transmite. Solo puede transmitir un dispositivo emparejado, y la imagen solo se ve desde el propio PC (o con el token). Solo vídeo, sin audio.
 
 **Los navegadores solo dejan usar la cámara por HTTPS** (o en `localhost`), así que elige una opción:

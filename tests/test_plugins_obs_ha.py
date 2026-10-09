@@ -39,6 +39,7 @@ def test_plugins_loaded():
         assert PLUGINS[pid]["status"] == "loaded", PLUGINS[pid].get("error")
     for name in ("obs_get", "obs_scene", "obs_record_toggle", "obs_stream_toggle",
                  "obs_record_pause_toggle", "obs_mute_toggle", "obs_replay_save",
+                 "obs_phonecam_setup", "obs_virtualcam_toggle",
                  "ha_get", "ha_service", "ha_toggle", "ha_scene"):
         assert name in REGISTRY
 
@@ -144,6 +145,82 @@ def test_obs_wrong_password(monkeypatch):
         assert obs.obs_get({})["state"]["obs"]["connected"] is False
     finally:
         server.shutdown()
+
+
+class FakeObsScenes:
+    """OBS simulado a nivel de peticiones (fuentes, escenas, cámara virtual)."""
+
+    def __init__(self):
+        self.inputs = {}                      # nombre → settings
+        self.scenes = {"Juego": {}, "Chat": {}}  # escena → {fuente: id}
+        self.current = "Juego"
+        self.vcam = False
+        self.calls = []
+        self.next_id = 1
+
+    def __call__(self, rtype, data=None):
+        data = data or {}
+        self.calls.append(rtype)
+        if rtype == "GetVideoSettings":
+            return {"baseWidth": 1920, "baseHeight": 1080}
+        if rtype == "GetCurrentProgramScene":
+            return {"currentProgramSceneName": self.current}
+        if rtype == "GetInputSettings":
+            if data["inputName"] not in self.inputs:
+                raise RuntimeError("OBS rechazó GetInputSettings: no existe")
+            return {"inputSettings": self.inputs[data["inputName"]]}
+        if rtype == "SetInputSettings":
+            self.inputs[data["inputName"]].update(data["inputSettings"])
+            return {}
+        if rtype == "GetSceneItemId":
+            item = self.scenes[data["sceneName"]].get(data["sourceName"])
+            if item is None:
+                raise RuntimeError("OBS rechazó GetSceneItemId: no está")
+            return {"sceneItemId": item}
+        if rtype in ("CreateInput", "CreateSceneItem"):
+            name = data.get("inputName") or data["sourceName"]
+            if rtype == "CreateInput":
+                assert data["inputKind"] == "browser_source"
+                self.inputs[name] = dict(data["inputSettings"])
+            self.scenes[data["sceneName"]][name] = self.next_id
+            self.next_id += 1
+            return {"sceneItemId": self.next_id - 1}
+        if rtype == "GetVirtualCamStatus":
+            return {"outputActive": self.vcam}
+        if rtype == "StartVirtualCam":
+            self.vcam = True
+            return {}
+        return {}
+
+
+def test_obs_phonecam_setup(monkeypatch):
+    fake = FakeObsScenes()
+    monkeypatch.setattr(obs, "_request", fake)
+    monkeypatch.setattr(obs, "_settings", lambda: {"host": "localhost"})
+
+    r = obs.obs_phonecam_setup({})
+    src = fake.inputs[obs.PHONECAM_SOURCE]
+    assert src["url"].endswith("://localhost:8765/phonecam/view")
+    assert (src["width"], src["height"]) == (1920, 1080)
+    assert obs.PHONECAM_SOURCE in fake.scenes["Juego"]
+    assert fake.vcam and "Juego" in r["message"]
+
+    # segunda vez: no duplica la fuente, solo la actualiza
+    fake.calls.clear()
+    obs.obs_phonecam_setup({})
+    assert "CreateInput" not in fake.calls and "CreateSceneItem" not in fake.calls
+    assert "StartVirtualCam" not in fake.calls          # ya estaba activa
+
+    # otra escena: se añade la misma fuente sin crear otra
+    obs.obs_phonecam_setup({"scene": "Chat", "virtualcam": False})
+    assert len(fake.inputs) == 1 and obs.PHONECAM_SOURCE in fake.scenes["Chat"]
+
+
+def test_obs_phonecam_url_remote_obs(monkeypatch):
+    """OBS en otro equipo: la URL lleva la IP de la red y el token."""
+    monkeypatch.setattr(obs, "_settings", lambda: {"host": "192.168.1.30"})
+    url = obs._phonecam_url()
+    assert "localhost" not in url and url.endswith("/phonecam/view?token=test-token")
 
 
 # -------------------------------------------------------- Home Assistant ---

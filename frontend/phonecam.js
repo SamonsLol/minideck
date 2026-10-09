@@ -79,7 +79,7 @@
         <select class="pc-fps" aria-label="fps"></select>
         <button type="button" class="pc-go"></button>
       </div>
-      <p class="pc-help"></p>`;
+      <div class="pc-obs"><button type="button" class="pc-obs-add"></button><p class="pc-help"></p></div>`;
     p.querySelector(".pc-head strong").textContent = T("pc.title");
     p.querySelector(".pc-flip").textContent = "⟲ " + T("pc.flip");
     p.querySelector(".pc-rot").onclick = () => { cam.rot = (cam.rot + 90) % 360; paintPanel(); };
@@ -88,6 +88,10 @@
     const f = p.querySelector(".pc-fps");
     for (const v of [15, 24, 30]) f.append(new Option(`${v} fps`, v, false, v === cam.fps));
     p.querySelector(".pc-help").textContent = T("pc.obsHelp");
+    // crea la fuente en OBS y enciende la cámara virtual (plugin OBS)
+    const obsBtn = p.querySelector(".pc-obs-add");
+    obsBtn.textContent = "＋ " + T("pc.obsAdd");
+    obsBtn.onclick = () => window.MiniDeck.run("obs_phonecam_setup", {});
     p.querySelector(".pc-close").onclick = closePanel;
     p.querySelector(".pc-flip").onclick = () => {
       cam.facing = cam.facing === "user" ? "environment" : "user";

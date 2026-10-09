@@ -23,6 +23,8 @@ Ajustes (en deck.json → "pluginSettings" → "obs"):
 import base64
 import hashlib
 import json
+import os
+import sys
 import threading
 import time
 import uuid
@@ -288,3 +290,89 @@ def obs_replay_save(params: dict):
         _request("SaveReplayBuffer")
         state = _state_after()
     return {"message": "Repetición guardada", "state": state}
+
+
+# ------------------------------------------------- webcam del móvil en OBS ---
+PHONECAM_SOURCE = "MiniDeck Webcam"
+
+
+def _phonecam_url() -> str:
+    """URL de /phonecam/view tal como la verá OBS. En el mismo equipo no hace
+    falta token (localhost); si OBS está en otro equipo, IP de la red + token."""
+    import auth
+    m = sys.modules.get("main") or sys.modules.get("__main__")
+    port = getattr(m, "PORT", None) or int(os.environ.get("MINIDECK_PORT", "8765"))
+    scheme = getattr(m, "SCHEME", "http")
+    host = str(_settings().get("host") or "localhost").strip().lower()
+    if host in ("localhost", "127.0.0.1", "::1"):
+        return f"{scheme}://localhost:{port}/phonecam/view"
+    ip = m.local_ip() if hasattr(m, "local_ip") else "localhost"
+    return f"{scheme}://{ip}:{port}/phonecam/view?token={auth.TOKEN}"
+
+
+def _exists(rtype: str, data: dict) -> bool:
+    try:
+        _request(rtype, data)
+        return True
+    except RuntimeError as exc:
+        if "conexión" in str(exc) or "conectar" in str(exc):
+            raise
+        return False
+
+
+@action("obs_phonecam_setup", schema={
+    "scene": {"type": "str", "required": False},
+    "virtualcam": {"type": "bool", "required": False},
+}, timeout=20)
+def obs_phonecam_setup(params: dict):
+    """Añade la webcam del móvil a OBS: crea (o actualiza) la fuente de navegador
+    "MiniDeck Webcam", la pone en la escena ajustada al lienzo y enciende la
+    cámara virtual. params: {"scene": "" (= escena actual), "virtualcam": true}"""
+    url = _phonecam_url()
+    with _lock:
+        video = _request("GetVideoSettings")
+        w, h = int(video.get("baseWidth") or 1920), int(video.get("baseHeight") or 1080)
+        scene = str(params.get("scene") or "").strip() or \
+            _request("GetCurrentProgramScene").get("currentProgramSceneName")
+        settings = {"url": url, "width": w, "height": h, "fps": 30,
+                    "reroute_audio": False, "shutdown": False}
+        if _exists("GetInputSettings", {"inputName": PHONECAM_SOURCE}):
+            _request("SetInputSettings", {"inputName": PHONECAM_SOURCE,
+                                          "inputSettings": settings, "overlay": True})
+            if _exists("GetSceneItemId", {"sceneName": scene, "sourceName": PHONECAM_SOURCE}):
+                item = _request("GetSceneItemId", {"sceneName": scene,
+                                                   "sourceName": PHONECAM_SOURCE})["sceneItemId"]
+            else:
+                item = _request("CreateSceneItem", {"sceneName": scene,
+                                                    "sourceName": PHONECAM_SOURCE})["sceneItemId"]
+        else:
+            item = _request("CreateInput", {"sceneName": scene, "inputName": PHONECAM_SOURCE,
+                                            "inputKind": "browser_source",
+                                            "inputSettings": settings,
+                                            "sceneItemEnabled": True})["sceneItemId"]
+        # ocupar todo el lienzo sin deformar (vertical u horizontal)
+        _request("SetSceneItemTransform", {"sceneName": scene, "sceneItemId": item,
+                                           "sceneItemTransform": {
+                                               "positionX": 0, "positionY": 0,
+                                               "boundsType": "OBS_BOUNDS_SCALE_INNER",
+                                               "boundsAlignment": 0,
+                                               "boundsWidth": w, "boundsHeight": h}})
+        _request("SetSceneItemEnabled", {"sceneName": scene, "sceneItemId": item,
+                                         "sceneItemEnabled": True})
+        cam = ""
+        if params.get("virtualcam", True):
+            if not _request("GetVirtualCamStatus").get("outputActive"):
+                _request("StartVirtualCam")
+            cam = " · cámara virtual activa"
+    # sin "state": así el móvil muestra el mensaje aunque no venga de un botón
+    return {"message": f"Webcam añadida a OBS ({scene}){cam}"}
+
+
+@action("obs_virtualcam_toggle")
+def obs_virtualcam_toggle(params: dict):
+    """Inicia/detiene la cámara virtual de OBS. params: {}"""
+    with _lock:
+        active = bool(_request("ToggleVirtualCam").get("outputActive"))
+        state = _state_after()
+    return {"message": "Cámara virtual activa" if active else "Cámara virtual detenida",
+            "state": state}

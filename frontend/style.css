@@ -1266,4 +1266,7 @@ a.icon-btn.about-link {
 .pc-ctl .pc-go { flex: 1; min-width: 140px; font-weight: 700; }
 .pc-ctl :disabled { opacity: .45; cursor: not-allowed; }
 .pc-ctl .pc-go.on { background: var(--err); border-color: var(--err); color: #fff; }
+.pc-obs { display: flex; gap: 10px; align-items: center; }
+.pc-obs-add { flex: none; background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; }
 .pc-help { font-size: 11.5px; color: var(--muted); line-height: 1.45; overflow-wrap: anywhere; }

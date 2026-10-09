@@ -33,6 +33,8 @@ Si OBS corre en otro equipo de la red, pon su IP en `host`.
 | `obs_record_pause_toggle` | `{}` | Pausa / reanuda la grabación |
 | `obs_mute_toggle` | `{"input": "Mic/Aux"}` | Silencia / activa una fuente de audio |
 | `obs_replay_save` | `{}` | Guarda el búfer de repetición (debe estar iniciado en OBS) |
+| `obs_phonecam_setup` | `{"scene": "", "virtualcam": true}` | Añade la webcam del móvil: crea (o actualiza) la fuente de navegador «MiniDeck Webcam» en la escena actual (o `scene`), ajustada al lienzo, y enciende la cámara virtual |
+| `obs_virtualcam_toggle` | `{}` | Inicia / detiene la cámara virtual |
 
 Ejemplos de botones:
 

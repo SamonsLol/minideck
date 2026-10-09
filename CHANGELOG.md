@@ -5,6 +5,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ## [Sin publicar]
 
 ### Añadido
+- **Añadir la webcam a OBS automáticamente**: botón «Añadir a OBS» en el panel de la webcam (acción `obs_phonecam_setup`). Crea o actualiza la fuente de navegador «MiniDeck Webcam» en la escena actual, ajustada al lienzo, y enciende la cámara virtual. Nueva acción `obs_virtualcam_toggle`.
 - **Webcam: la imagen gira con el celular.** Si la rotación automática está bloqueada (o el navegador no gira los fotogramas), MiniDeck usa el sensor de orientación y envía la imagen derecha al poner el celular en horizontal. Nuevo botón **↻ Rotar** para corregirla a mano.
 - Aviso cuando el celular no confía en el certificado HTTPS (sin él, la app instalada sale con un icono genérico y la cámara no funciona). Script `build/make_cert.ps1` para generar el certificado en Windows.
 

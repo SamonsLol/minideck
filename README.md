@@ -166,6 +166,8 @@ Add the **Webcam** widget (it's on the default *Stream* page), tap it on the pho
 | `http://localhost:8765/phonecam/stream.mjpg` | MJPEG stream for apps that accept one (VLC, etc.) |
 | `http://localhost:8765/phonecam/snapshot.jpg` | latest frame |
 
+**Automatic OBS setup:** with OBS's WebSocket server enabled (see the OBS plugin), tap **Add to OBS** in the webcam panel: MiniDeck creates the *MiniDeck Webcam* browser source in the current scene, fits it to the canvas and starts the virtual camera. Same as the `obs_phonecam_setup` action, which you can put on any button.
+
 Choose front/back camera, 480p/720p/1080p and 15/24/30 fps from the phone; the screen stays on while streaming. Only a paired device can stream, and the image can only be viewed from the PC itself (or with the pairing token). Video only, no audio.
 
 **Browsers only allow the camera over HTTPS** (or on `localhost`), so pick one:
