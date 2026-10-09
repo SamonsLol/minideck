@@ -1838,13 +1838,13 @@ function endDrag() {
 
 /* ------------------------------------------------ toast */
 let toastTimer = null;
-function toast(text, isError) {
+function toast(text, isError, ms = 1800) {
   const t = $("toast");
   t.textContent = text;
   t.classList.toggle("error", !!isError);
   t.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
+  toastTimer = setTimeout(() => t.classList.remove("show"), ms);
 }
 
 /* ------------------------------------------------ widgets de serie */
@@ -2107,5 +2107,12 @@ setInterval(() => {
 // Service worker: solo funciona bajo HTTPS o localhost.
 // En red local por HTTP simplemente se omite sin romper nada.
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register("sw.js").catch((e) => {
+    // Por HTTPS, si falla es casi siempre un certificado en el que el móvil no
+    // confía: Chrome entonces no instala la app (crea un acceso directo con un
+    // icono genérico) y tampoco deja usar la cámara.
+    if (location.protocol === "https:" && e && e.name === "SecurityError") {
+      setTimeout(() => toast(T("pwa.untrusted"), true, 9000), 1500);
+    }
+  });
 }
