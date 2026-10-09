@@ -199,12 +199,8 @@
      hace), el celular en horizontal enviaría la imagen de lado: se compara la
      orientación física (sensor) con la de la pantalla y se corrige al dibujar. */
   let watching = false;
-  async function watchOrientation() {
+  function watchOrientation() {
     if (watching) return;
-    try {   // iOS pide permiso (debe llamarse desde un toque: el botón Transmitir)
-      if (typeof DeviceOrientationEvent?.requestPermission === "function" &&
-          await DeviceOrientationEvent.requestPermission() !== "granted") return;
-    } catch { return; }
     watching = true;
     window.addEventListener("deviceorientation", (e) => {
       if (e.beta == null || e.gamma == null) return;
@@ -213,6 +209,14 @@
       else if (Math.abs(b) > 45) cam.physical = b > 0 ? 0 : 180;   // de pie / al revés
       // casi plano: se mantiene la última
     });
+    // iOS (y algunos Chromium) piden permiso, y debe pedirse desde un toque (el
+    // botón Transmitir). Si se deniega, el sensor no envía nada y el botón Rotar
+    // sigue sirviendo.
+    try {
+      if (typeof DeviceOrientationEvent?.requestPermission === "function") {
+        DeviceOrientationEvent.requestPermission().catch(() => {});
+      }
+    } catch { /* sin permiso */ }
   }
 
   function screenAngle() {

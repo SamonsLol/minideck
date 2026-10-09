@@ -584,7 +584,8 @@ def test_phone_as_webcam(browser, server):
         {"id": "cam", "type": "phonecam", "label": "Webcam", "icon": "lucide:webcam"}]})
     main.save_config(cfg)
     try:
-        ctx = browser.new_context(viewport={"width": 390, "height": 844}, locale="es")
+        ctx = browser.new_context(viewport={"width": 390, "height": 844}, locale="es",
+                                  permissions=["accelerometer", "gyroscope", "magnetometer"])
         ctx.add_init_script("localStorage.setItem('minideck-lang', 'es')")
         ctx.add_init_script(FAKE_CAMERA)
         page = ctx.new_page()
