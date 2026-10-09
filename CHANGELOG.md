@@ -2,7 +2,7 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.4.0] - 2026-10-09
 
 ### Añadido
 - **El móvil como webcam del PC** (widget «Webcam»): la cámara del teléfono (frontal o trasera, 480p–1080p, 15–30 fps) se transmite al PC y se ve en `/phonecam/view` (fuente de navegador de OBS → cámara virtual para Zoom, Meet o Discord), `/phonecam/stream.mjpg` y `/phonecam/snapshot.jpg`. Solo transmite un dispositivo emparejado y la imagen solo se ve desde el propio equipo o con el token. Opcional: cámara virtual directa con `pyvirtualcam`. Requiere HTTPS (mkcert) o `adb reverse` en Android.

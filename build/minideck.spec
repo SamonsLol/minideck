@@ -78,7 +78,7 @@ app = BUNDLE(
         "LSUIElement": True,               # sin icono en el Dock (barra de menú)
         "CFBundleName": "MiniDeck",
         "CFBundleDisplayName": "MiniDeck",
-        "CFBundleShortVersionString": "1.3.0",
+        "CFBundleShortVersionString": "1.4.0",
         "NSHighResolutionCapable": True,
     },
 )
