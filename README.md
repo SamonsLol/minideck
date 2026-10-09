@@ -170,7 +170,12 @@ Choose front/back camera, 480p/720p/1080p and 15/24/30 fps from the phone; the s
 
 **Browsers only allow the camera over HTTPS** (or on `localhost`), so pick one:
 
-- **HTTPS on your network:** create a certificate with [mkcert](https://github.com/FiloSottile/mkcert) (`winget install FiloSottile.mkcert` / `brew install mkcert`), e.g. `mkcert -cert-file cert.pem -key-file key.pem 192.168.1.20 localhost`, copy both files to the `certs/` folder inside MiniDeck's data folder and restart (on macOS `build/make_cert.command` does it for you). Install mkcert's root CA on the phone so it trusts it.
+- **HTTPS on your network:** run the script for your system. It installs [mkcert](https://github.com/FiloSottile/mkcert), creates the `certs` folder and generates `cert.pem` + `key.pem` for your IP:
+  - Windows: `powershell -ExecutionPolicy Bypass -File build\make_cert.ps1` → `%APPDATA%\MiniDeck\certs`
+  - macOS: `bash build/make_cert.command` → `~/Library/Application Support/MiniDeck/certs`
+  - Linux (by hand): `mkdir -p ~/.config/minideck/certs && mkcert -cert-file ~/.config/minideck/certs/cert.pem -key-file ~/.config/minideck/certs/key.pem localhost <your-IP>`
+
+  The folder doesn't exist until you create it. Then install `rootCA.pem` (copied into that folder) on the phone as a CA certificate and restart MiniDeck: it will print `[HTTPS]`.
 - **Android over USB, no certificate:** `adb reverse tcp:8765 tcp:8765` and open `http://localhost:8765` on the phone.
 
 Optional, without OBS: `pip install pyvirtualcam numpy Pillow` (plus OBS's virtual camera driver, or v4l2loopback on Linux) and MiniDeck feeds the frames straight into the system virtual camera.
