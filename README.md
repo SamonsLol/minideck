@@ -1,7 +1,8 @@
 # MiniDeck
 
-**English** · [Español](README.es.md)
+**English** · [Español](README.es.md) · 🌐 **[minideck.samons.co](https://minideck.samons.co)**
 
+[![Website](https://img.shields.io/badge/web-minideck.samons.co-60a5fa?logo=googlechrome&logoColor=white)](https://minideck.samons.co)
 [![CI](https://github.com/SamonsLol/minideck/actions/workflows/ci.yml/badge.svg)](https://github.com/SamonsLol/minideck/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
@@ -11,6 +12,8 @@
 Turn your phone into a **Stream Deck** for your PC or Mac. There's no app to install on the phone: it's a PWA you open in the browser. The server is Python (FastAPI + WebSocket) and the frontend is plain HTML/CSS/JS with no build step.
 
 Issues and PRs are welcome in English or Spanish.
+
+> **See it in action:** the website **[minideck.samons.co](https://minideck.samons.co)** is built like the app itself — tap the keys, toggle the stateful buttons and switch themes.
 
 <p align="center">
   <img src="docs/screenshots/tour.gif" width="640" alt="Tour: pages, folders, editor, language and themes">
@@ -42,7 +45,7 @@ Issues and PRs are welcome in English or Spanish.
 
 ### Option 1: download (no Python needed)
 
-Grab the latest build from [**Releases**](https://github.com/SamonsLol/minideck/releases):
+Grab the latest build from the [**website**](https://minideck.samons.co/en/#descargar) or from [**Releases**](https://github.com/SamonsLol/minideck/releases):
 
 - **Windows:** `MiniDeck-…-windows.zip` → unzip → run `MiniDeck.exe`. A tray icon appears: right-click → *Mostrar QR*.
 - **macOS:** `MiniDeck-…-macos.dmg` → drag to Applications. The first time: right-click → *Open* (the app isn't notarized). See [README_MAC.md](README_MAC.md) for permissions.

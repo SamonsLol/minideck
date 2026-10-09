@@ -49,7 +49,9 @@ minideck = "minideck_launcher:main"
 minideck-tray = "minideck_launcher:tray"
 
 [project.urls]
-Homepage = "https://github.com/SamonsLol/minideck"
+Homepage = "https://minideck.samons.co"
+Repository = "https://github.com/SamonsLol/minideck"
+Download = "https://github.com/SamonsLol/minideck/releases/latest"
 Issues = "https://github.com/SamonsLol/minideck/issues"
 Changelog = "https://github.com/SamonsLol/minideck/blob/main/CHANGELOG.md"
 
