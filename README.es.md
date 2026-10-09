@@ -34,6 +34,7 @@ Se aceptan issues y PRs en español o en inglés.
 - **Carpetas**: un botón puede abrir otra página, y `back` vuelve.
 - **Botones con estado**: icono, color y texto cambian según el estado en vivo (OBS grabando, Discord silenciado, una luz de Home Assistant encendida…).
 - **Widgets en vivo**: volumen, mezclador por app (Windows), *Now Playing* con carátula, Discord (mute/sordina y quién habla), CPU/RAM, clima, Git, Docker, **OBS Studio** y **Home Assistant**.
+- **El móvil como webcam**: transmite la cámara del teléfono al PC y úsala en OBS, Zoom, Meet o Discord ([cómo](#el-móvil-como-webcam)).
 - **Editor visual** desde el propio móvil: páginas, iconos (Lucide), colores, arrastrar y soltar, **deshacer** e **importar/exportar** decks.
 - **Funciona sin internet en tu red local**: el servidor guarda los iconos en caché tras el primer uso.
 - Interfaz en **español e inglés** (botón **ES/EN** de la barra superior).
@@ -154,6 +155,25 @@ La primera vez se crea a partir del deck por defecto de tu sistema (`server/conf
 Los parámetros se validan antes de ejecutar, así que un error se ve claro en el móvil. Cada acción tiene un tiempo máximo (30 s por defecto), para que una acción colgada no deje el móvil esperando. Al elegir una acción, el editor rellena una plantilla de parámetros. La lista exacta de tu equipo: `GET /api/actions/schema`.
 
 Discord requiere crear una app en el portal de desarrolladores: instrucciones al principio de [server/actions/discord_rpc.py](server/actions/discord_rpc.py) y plantilla en `server/config/discord.example.json`.
+
+## El móvil como webcam
+
+Añade el widget **Webcam** (viene en la página *Stream* por defecto), tócalo en el móvil y pulsa **Transmitir al PC**. El PC recibe el vídeo en:
+
+| URL (en el PC) | Uso |
+|---|---|
+| `http://localhost:8765/phonecam/view` | OBS → **Fuente de navegador** (1280×720 o 1920×1080) → **Iniciar cámara virtual**. Zoom, Meet, Teams y Discord la ven como una webcam más. |
+| `http://localhost:8765/phonecam/stream.mjpg` | flujo MJPEG para programas que lo acepten (VLC, etc.) |
+| `http://localhost:8765/phonecam/snapshot.jpg` | último fotograma |
+
+Desde el móvil eliges cámara frontal/trasera, 480p/720p/1080p y 15/24/30 fps; la pantalla no se apaga mientras transmite. Solo puede transmitir un dispositivo emparejado, y la imagen solo se ve desde el propio PC (o con el token). Solo vídeo, sin audio.
+
+**Los navegadores solo dejan usar la cámara por HTTPS** (o en `localhost`), así que elige una opción:
+
+- **HTTPS en tu red:** crea un certificado con [mkcert](https://github.com/FiloSottile/mkcert) (`winget install FiloSottile.mkcert` / `brew install mkcert`), p. ej. `mkcert -cert-file cert.pem -key-file key.pem 192.168.1.20 localhost`, copia los dos archivos a la carpeta `certs/` dentro de la carpeta de datos de MiniDeck y reinicia (en macOS `build/make_cert.command` lo hace por ti). Instala la CA raíz de mkcert en el móvil para que confíe en él.
+- **Android por USB, sin certificado:** `adb reverse tcp:8765 tcp:8765` y abre `http://localhost:8765` en el móvil.
+
+Opcional, sin OBS: `pip install pyvirtualcam numpy Pillow` (más el driver de cámara virtual de OBS, o v4l2loopback en Linux) y MiniDeck envía los fotogramas directamente a la cámara virtual del sistema.
 
 ## Plugins
 

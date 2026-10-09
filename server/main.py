@@ -31,6 +31,7 @@ from fastapi.staticfiles import StaticFiles
 import auth
 import basic
 import icons
+import phonecam
 import plugin_store
 from actions import (
     META,
@@ -722,6 +723,7 @@ basic.configure(
 app.include_router(basic.router)
 plugin_store.configure(load_config=load_config, save_config=save_config)
 app.include_router(plugin_store.router)
+app.include_router(phonecam.router)   # el móvil como webcam del PC
 
 # Frontend (al final para no tapar /ws, /api ni /plugins)
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

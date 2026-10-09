@@ -34,6 +34,7 @@ Issues and PRs are welcome in English or Spanish.
 - **Folders**: a button can open another page, and `back` returns.
 - **Stateful buttons**: icon, color and label change with live state (OBS recording, Discord muted, a Home Assistant light on…).
 - **Live widgets**: volume, per-app mixer (Windows), *Now Playing* with album art, Discord (mute/deafen and who's speaking), CPU/RAM, weather, Git, Docker, **OBS Studio** and **Home Assistant**.
+- **Phone as webcam**: stream the phone's camera to the PC and use it in OBS, Zoom, Meet or Discord ([how](#phone-as-webcam)).
 - **Visual editor** right on the phone: pages, icons (Lucide), colors, drag and drop, **undo**, and deck **import/export**.
 - **Works offline on your LAN**: icons are cached by the server after first use.
 - **Spanish and English** UI (tap **ES/EN** in the top bar).
@@ -154,6 +155,25 @@ On first run it's created from the default deck for your OS (`server/config/deck
 Parameters are validated before running, so a mistake shows a clear message on the phone. Every action has a timeout (30 s by default), so a hung action can't leave the phone waiting. The editor fills in a parameter template when you pick an action. The exact list on your machine: `GET /api/actions/schema`.
 
 Discord needs an app created in the Discord Developer Portal: see the instructions at the top of [server/actions/discord_rpc.py](server/actions/discord_rpc.py) and the template in `server/config/discord.example.json`.
+
+## Phone as webcam
+
+Add the **Webcam** widget (it's on the default *Stream* page), tap it on the phone and press **Stream to PC**. The PC receives the video at:
+
+| URL (on the PC) | Use |
+|---|---|
+| `http://localhost:8765/phonecam/view` | OBS → **Browser source** (1280×720 or 1920×1080) → **Start Virtual Camera**. Zoom, Meet, Teams and Discord then see it as a regular webcam. |
+| `http://localhost:8765/phonecam/stream.mjpg` | MJPEG stream for apps that accept one (VLC, etc.) |
+| `http://localhost:8765/phonecam/snapshot.jpg` | latest frame |
+
+Choose front/back camera, 480p/720p/1080p and 15/24/30 fps from the phone; the screen stays on while streaming. Only a paired device can stream, and the image can only be viewed from the PC itself (or with the pairing token). Video only, no audio.
+
+**Browsers only allow the camera over HTTPS** (or on `localhost`), so pick one:
+
+- **HTTPS on your network:** create a certificate with [mkcert](https://github.com/FiloSottile/mkcert) (`winget install FiloSottile.mkcert` / `brew install mkcert`), e.g. `mkcert -cert-file cert.pem -key-file key.pem 192.168.1.20 localhost`, copy both files to the `certs/` folder inside MiniDeck's data folder and restart (on macOS `build/make_cert.command` does it for you). Install mkcert's root CA on the phone so it trusts it.
+- **Android over USB, no certificate:** `adb reverse tcp:8765 tcp:8765` and open `http://localhost:8765` on the phone.
+
+Optional, without OBS: `pip install pyvirtualcam numpy Pillow` (plus OBS's virtual camera driver, or v4l2loopback on Linux) and MiniDeck feeds the frames straight into the system virtual camera.
 
 ## Plugins
 

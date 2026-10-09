@@ -87,7 +87,11 @@ def browser():
     channel = os.environ.get("MINIDECK_TEST_BROWSER") or None
     with pw.sync_playwright() as p:
         try:
-            b = p.chromium.launch(channel=channel)
+            # cámara simulada para el test de la webcam del móvil; el permiso
+            # solo se concede donde se pide (permissions=["camera"]), así el
+            # escáner de QR del resto de tests sigue usando la foto
+            b = p.chromium.launch(channel=channel,
+                                  args=["--use-fake-device-for-media-stream"])
         except Exception as exc:  # noqa: BLE001
             pytest.skip(f"navegador no disponible: {exc}")
         yield b
@@ -554,3 +558,44 @@ def test_panel_plugins_view(browser, server, width, height):
     ctx.close()
     assert sizes[0] <= sizes[1] + 1, f"la vista de plugins se desborda: {sizes}"
     assert not errors, errors
+
+
+def test_phone_as_webcam(browser, server):
+    """El móvil abre la cámara, transmite y el PC recibe los fotogramas
+    (localhost es contexto seguro; Chromium usa una cámara simulada)."""
+    import phonecam
+    phonecam.hub.frame = None
+    cfg = main.load_config()
+    cfg["pages"] = [p for p in cfg["pages"] if p["id"] != "ui_cam"]
+    cfg["pages"].append({"id": "ui_cam", "name": "Cam", "buttons": [
+        {"id": "cam", "type": "phonecam", "label": "Webcam", "icon": "lucide:webcam"}]})
+    main.save_config(cfg)
+    try:
+        ctx = browser.new_context(viewport={"width": 390, "height": 844}, locale="es",
+                                  permissions=["camera"])
+        ctx.add_init_script("localStorage.setItem('minideck-lang', 'es')")
+        page = ctx.new_page()
+        page.goto(server + "/")
+        page.wait_for_selector(".page-tab")
+        page.locator(".page-tab", has_text="Cam").click()
+        page.click(".pc-key")
+        page.wait_for_selector(".pc-panel.open")
+        page.wait_for_function("document.querySelector('.pc-panel video').videoWidth > 0",
+                               timeout=10000)
+        page.click(".pc-go")
+        page.wait_for_selector(".pc-live:not([hidden])")
+        for _ in range(100):
+            if phonecam.hub.frame:
+                break
+            page.wait_for_timeout(100)
+        assert phonecam.hub.frame and phonecam.hub.frame.startswith(bytes([0xFF, 0xD8]))
+        assert phonecam.hub.width > 0
+        assert "EN VIVO" in page.locator(".pc-key .pc-badge").inner_text()
+        page.click(".pc-go")                                  # detener
+        page.wait_for_selector(".pc-live", state="hidden")
+        page.click(".pc-close")
+        ctx.close()
+    finally:
+        cfg = main.load_config()
+        cfg["pages"] = [p for p in cfg["pages"] if p["id"] != "ui_cam"]
+        main.save_config(cfg)

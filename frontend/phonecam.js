@@ -1,0 +1,228 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   SPDX-FileCopyrightText: 2026 Samons */
+/* ============================================================
+   Webcam del móvil: usa la cámara del teléfono como webcam del PC.
+   Widget "phonecam": al tocarlo abre la cámara, y "Transmitir" envía
+   fotogramas JPEG al servidor (/phonecam/ws). En el PC se ven en
+   /phonecam/view (fuente de navegador de OBS → cámara virtual).
+   El navegador solo da acceso a la cámara en contexto seguro (HTTPS,
+   o localhost: p. ej. Android por USB con `adb reverse`).
+   ============================================================ */
+(() => {
+  const T = (k, v) => window.MiniDeckI18n.t(k, v);
+  const QUALITY = { "480p": [854, 480], "720p": [1280, 720], "1080p": [1920, 1080] };
+  const cam = {
+    stream: null, ws: null, running: false, timer: null, wake: null,
+    facing: "user", quality: "720p", fps: 24, sent: 0, lastSent: 0, shown: 0,
+  };
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+
+  /* ---------------------------------------------- tecla del deck */
+  function build(w) {
+    const k = el("button", "key pc-key");
+    k.type = "button";
+    k.dataset.id = w.id;
+    k.style.setProperty("--led", w.color || "#f87171");
+    const ic = el("span", "icon");
+    window.MiniDeck.renderIcon(ic, w.icon || "lucide:webcam", "#c9d1dd");
+    const lb = el("span", "label", w.label || T("pc.title"));
+    const st = el("span", "pc-badge", cam.running ? T("pc.live") : "");
+    k.append(ic, lb, st);
+    k.onclick = () => openPanel();
+    return k;
+  }
+
+  function paintKeys() {
+    for (const b of document.querySelectorAll(".pc-key .pc-badge")) {
+      b.textContent = cam.running ? `● ${T("pc.live")}` : "";
+    }
+    document.querySelectorAll(".pc-key").forEach((k) => k.classList.toggle("is-on", cam.running));
+  }
+
+  /* ---------------------------------------------- panel de la cámara */
+  let panel = null;
+  function openPanel() {
+    if (!panel) panel = makePanel();
+    panel.classList.add("open");
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      panel.querySelectorAll(".pc-ctl button, .pc-ctl select").forEach((c) => { c.disabled = true; });
+      showMsg(T("pc.insecure"), T("pc.insecureHelp", { url: `https://${location.hostname}:${location.port || 8765}` }));
+      return;
+    }
+    if (!cam.stream) startPreview();
+  }
+
+  function makePanel() {
+    const p = el("div", "pc-panel");
+    p.setAttribute("role", "dialog");
+    p.setAttribute("aria-modal", "true");
+    p.setAttribute("aria-label", T("pc.title"));
+    p.innerHTML = `
+      <div class="pc-head">
+        <strong></strong><span class="pc-live" hidden></span>
+        <button type="button" class="pc-close" aria-label="✕">✕</button>
+      </div>
+      <div class="pc-stage"><video playsinline muted autoplay></video>
+        <div class="pc-msg" hidden><strong></strong><p></p></div></div>
+      <div class="pc-ctl">
+        <button type="button" class="pc-flip"></button>
+        <select class="pc-q" aria-label="quality"></select>
+        <select class="pc-fps" aria-label="fps"></select>
+        <button type="button" class="pc-go"></button>
+      </div>
+      <p class="pc-help"></p>`;
+    p.querySelector(".pc-head strong").textContent = T("pc.title");
+    p.querySelector(".pc-flip").textContent = "⟲ " + T("pc.flip");
+    const q = p.querySelector(".pc-q");
+    for (const k of Object.keys(QUALITY)) q.append(new Option(k, k, false, k === cam.quality));
+    const f = p.querySelector(".pc-fps");
+    for (const v of [15, 24, 30]) f.append(new Option(`${v} fps`, v, false, v === cam.fps));
+    p.querySelector(".pc-help").textContent = T("pc.obsHelp");
+    p.querySelector(".pc-close").onclick = closePanel;
+    p.querySelector(".pc-flip").onclick = () => {
+      cam.facing = cam.facing === "user" ? "environment" : "user";
+      startPreview();
+    };
+    q.onchange = () => { cam.quality = q.value; startPreview(); };
+    f.onchange = () => { cam.fps = Number(f.value); };
+    p.querySelector(".pc-go").onclick = () => (cam.running ? stopSending() : startSending());
+    document.body.appendChild(p);
+    paintPanel();
+    return p;
+  }
+
+  function showMsg(title, text) {
+    const m = panel.querySelector(".pc-msg");
+    m.hidden = !title;
+    m.querySelector("strong").textContent = title || "";
+    m.querySelector("p").textContent = text || "";
+  }
+
+  function paintPanel() {
+    if (!panel) return;
+    const go = panel.querySelector(".pc-go");
+    go.textContent = cam.running ? "■ " + T("pc.stop") : "● " + T("pc.start");
+    go.classList.toggle("on", cam.running);
+    const live = panel.querySelector(".pc-live");
+    live.hidden = !cam.running;
+    live.textContent = `● ${T("pc.live")} · ${cam.shown} fps`;
+    panel.querySelector("video").classList.toggle("mirror", cam.facing === "user");
+    paintKeys();
+  }
+
+  async function startPreview() {
+    stopTracks();
+    showMsg("");
+    const [w, h] = QUALITY[cam.quality];
+    try {
+      cam.stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: cam.facing, width: { ideal: w }, height: { ideal: h } },
+      });
+      const v = panel.querySelector("video");
+      v.srcObject = cam.stream;
+      await v.play().catch(() => {});
+    } catch (e) {
+      showMsg(T("pc.denied"), String(e.message || e.name || e));
+    }
+    paintPanel();
+  }
+
+  function stopTracks() {
+    cam.stream?.getTracks().forEach((t) => t.stop());
+    cam.stream = null;
+  }
+
+  function closePanel() {
+    stopSending();
+    stopTracks();
+    panel?.classList.remove("open");
+  }
+
+  /* ---------------------------------------------- envío */
+  function startSending() {
+    if (!cam.stream) return;
+    const ws = new WebSocket(MiniDeckAuth.wsUrl("/phonecam/ws"));
+    ws.binaryType = "arraybuffer";
+    cam.ws = ws;
+    ws.onopen = () => {
+      cam.running = true;
+      cam.sent = 0;
+      tick();
+      keepAwake();
+      paintPanel();
+    };
+    ws.onclose = (ev) => {
+      if (cam.ws !== ws) return;
+      const was = cam.running;
+      cam.running = false;
+      cam.ws = null;
+      clearTimeout(cam.timer);
+      releaseWake();
+      paintPanel();
+      if (ev.code === 4409) window.MiniDeck.toast(T("pc.taken"), true);
+      else if (was && ev.code !== 1000) window.MiniDeck.toast(T("pc.lost"), true);
+    };
+  }
+
+  function stopSending() {
+    cam.running = false;
+    clearTimeout(cam.timer);
+    if (cam.ws) {
+      const ws = cam.ws;
+      cam.ws = null;
+      try { ws.close(1000); } catch { /* */ }
+    }
+    releaseWake();
+    paintPanel();
+  }
+
+  const canvas = document.createElement("canvas");
+  let fpsWindow = [];
+  function tick() {
+    if (!cam.running) return;
+    const v = panel.querySelector("video");
+    const ws = cam.ws;
+    // control de flujo: si la red va lenta, no acumular fotogramas
+    if (ws && ws.readyState === 1 && ws.bufferedAmount < 400_000 && v.videoWidth) {
+      canvas.width = v.videoWidth;
+      canvas.height = v.videoHeight;
+      canvas.getContext("2d").drawImage(v, 0, 0);
+      canvas.toBlob((b) => {
+        if (b && cam.ws === ws && ws.readyState === 1) {
+          ws.send(b);
+          const now = performance.now();
+          fpsWindow = fpsWindow.filter((t) => now - t < 1000).concat(now);
+          cam.shown = fpsWindow.length;
+          const live = panel.querySelector(".pc-live");
+          if (live) live.textContent = `● ${T("pc.live")} · ${cam.shown} fps · ${v.videoWidth}×${v.videoHeight}`;
+        }
+      }, "image/jpeg", cam.quality === "1080p" ? 0.7 : 0.75);
+    }
+    cam.timer = setTimeout(tick, 1000 / cam.fps);
+  }
+
+  /* pantalla siempre encendida mientras transmite */
+  async function keepAwake() {
+    try { cam.wake = await navigator.wakeLock?.request("screen"); } catch { /* */ }
+  }
+  function releaseWake() {
+    try { cam.wake?.release(); } catch { /* */ }
+    cam.wake = null;
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && cam.running) keepAwake();
+  });
+
+  window.MiniDeck.registerWidget("phonecam", {
+    label: "📷 " + (window.MiniDeckI18n ? T("pc.title") : "Webcam"),
+    build,
+    noAction: true,
+  });
+})();

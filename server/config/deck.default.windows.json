@@ -605,6 +605,13 @@
             "icon": "lucide:headphone-off",
             "color": "#f87171"
           }
+        },
+        {
+          "id": "phonecam",
+          "type": "phonecam",
+          "label": "Webcam",
+          "icon": "lucide:webcam",
+          "color": "#f87171"
         }
       ]
     },
