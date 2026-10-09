@@ -2,7 +2,7 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.5.0] - 2026-10-09
 
 ### Añadido
 - **Añadir la webcam a OBS automáticamente**: botón «Añadir a OBS» en el panel de la webcam (acción `obs_phonecam_setup`). Crea o actualiza la fuente de navegador «MiniDeck Webcam» en la escena actual, ajustada al lienzo, y enciende la cámara virtual. Nueva acción `obs_virtualcam_toggle`.
