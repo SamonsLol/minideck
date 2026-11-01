@@ -2,4 +2,4 @@
 #   python3 -m venv buildenv
 #   ./buildenv/bin/pip install -r requirements-mac.txt
 -r requirements.txt
-pyinstaller>=6.3
+pyinstaller>=6.22.3
