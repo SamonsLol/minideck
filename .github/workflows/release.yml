@@ -30,7 +30,7 @@ jobs:
       - name: Comprimir
         shell: pwsh
         run: Compress-Archive -Path dist/MiniDeck -DestinationPath "MiniDeck-${{ github.ref_name }}-windows.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: MiniDeck-*-windows.zip
@@ -57,7 +57,7 @@ jobs:
           ln -s /Applications "$STAGE/Applications"
           hdiutil create -volname MiniDeck -srcfolder "$STAGE" -ov -format UDZO \
             "MiniDeck-${{ github.ref_name }}-macos.dmg"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: MiniDeck-*-macos.dmg
@@ -71,7 +71,7 @@ jobs:
           python-version: "3.12"
       - run: pip install build
       - run: python -m build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: python
           path: dist/*
