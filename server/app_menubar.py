@@ -19,9 +19,30 @@ import rumps
 import segno
 import uvicorn
 
+import desktop_language
 import main as mdk  # server/main.py — comparte app, PORT, local_ip
 
 _windows = []        # mantener referencias a las ventanas del QR (evitar GC)
+
+
+_TEXT = {
+    "en": {
+        "show_qr": "Show QR code", "open": "Open on this Mac", "copy": "Copy URL",
+        "login": "Launch at login", "language": "Language", "quit": "Quit",
+        "copied": "URL copied", "login_app_only": "Available only in the packaged app (.app).",
+        "scan_help": "Scan it with your iPhone camera\nand open it in Safari",
+    },
+    "es": {
+        "show_qr": "Mostrar QR", "open": "Abrir en este Mac", "copy": "Copiar URL",
+        "login": "Arrancar al iniciar sesión", "language": "Idioma", "quit": "Salir",
+        "copied": "URL copiada", "login_app_only": "Disponible solo en la app empaquetada (.app).",
+        "scan_help": "Escanéalo con la cámara del iPhone\ny abre en Safari",
+    },
+}
+
+
+def _text(language: str, key: str) -> str:
+    return _TEXT[language][key]
 
 
 # ----------------------------------------------------------------- servidor --
@@ -48,7 +69,7 @@ def _qr_png(url: str, scale: int = 8) -> bytes:
 
 
 # ------------------------------------------------------------- ventana del QR
-def show_qr_window():
+def show_qr_window(language: str):
     from AppKit import (
         NSApp,
         NSBackingStoreBuffered,
@@ -96,8 +117,7 @@ def show_qr_window():
         return f
 
     _label(NSMakeRect(0, 78, W, 26), mdk.base_url(), 15, mono=True)
-    _label(NSMakeRect(20, 24, W - 40, 44),
-           "Escanéalo con la cámara del iPhone\ny abre en Safari", 12, secondary=True)
+    _label(NSMakeRect(20, 24, W - 40, 44), _text(language, "scan_help"), 12, secondary=True)
 
     win.makeKeyAndOrderFront_(None)
     win.setLevel_(3)   # flotante por encima
@@ -124,10 +144,10 @@ def is_login_item() -> bool:
     return "MiniDeck" in (r.stdout or "")
 
 
-def set_login_item(enable: bool):
+def set_login_item(enable: bool, language: str):
     app = _app_path()
     if not app:
-        rumps.alert("Disponible solo en la app empaquetada (.app).")
+        rumps.alert(_text(language, "login_app_only"))
         return
     if enable:
         subprocess.run(
@@ -156,32 +176,64 @@ class MiniDeckApp(rumps.App):
         icon = _asset("menubar-template.png")
         super().__init__("MiniDeck", title=None if icon else "MiniDeck", icon=icon,
                          template=True, quit_button=None)
-        self._login = rumps.MenuItem("Arrancar al iniciar sesión",
-                                     callback=self.on_login)
+        self._language = desktop_language.get_language()
+        self._qr = rumps.MenuItem("", callback=self.on_qr)
+        self._open = rumps.MenuItem("", callback=self.on_open)
+        self._copy = rumps.MenuItem("", callback=self.on_copy)
+        self._login = rumps.MenuItem("", callback=self.on_login)
         self._login.state = is_login_item()
+        self._language_menu = rumps.MenuItem("")
+        self._english = rumps.MenuItem("English", callback=self.on_english)
+        self._spanish = rumps.MenuItem("Español", callback=self.on_spanish)
+        self._language_menu.add(self._english)
+        self._language_menu.add(self._spanish)
+        self._quit = rumps.MenuItem("", callback=self.on_quit)
+        self._refresh_menu()
         self.menu = [
-            rumps.MenuItem("Mostrar QR", callback=self.on_qr),
-            rumps.MenuItem("Abrir en este Mac", callback=self.on_open),
-            rumps.MenuItem("Copiar URL", callback=self.on_copy),
+            self._qr,
+            self._open,
+            self._copy,
             None,
+            self._language_menu,
             self._login,
             None,
-            rumps.MenuItem("Salir", callback=self.on_quit),
+            self._quit,
         ]
 
+    def _refresh_menu(self):
+        self._qr.title = _text(self._language, "show_qr")
+        self._open.title = _text(self._language, "open")
+        self._copy.title = _text(self._language, "copy")
+        self._login.title = _text(self._language, "login")
+        self._language_menu.title = _text(self._language, "language")
+        self._quit.title = _text(self._language, "quit")
+        self._english.state = self._language == "en"
+        self._spanish.state = self._language == "es"
+
+    def _set_language(self, language: str):
+        self._language = desktop_language.set_language(language)
+        self._refresh_menu()
+
     def on_qr(self, _):
-        show_qr_window()
+        show_qr_window(self._language)
 
     def on_open(self, _):
-        subprocess.run(["open", f"{mdk.SCHEME}://localhost:{mdk.PORT}"], check=False)
+        subprocess.run(["open", f"{mdk.SCHEME}://localhost:{mdk.PORT}?lang={self._language}"],
+                       check=False)
 
     def on_copy(self, _):
         subprocess.run(["pbcopy"], input=_url(), text=True, check=False)
-        rumps.notification("MiniDeck", "URL copiada", _url())
+        rumps.notification("MiniDeck", _text(self._language, "copied"), _url())
 
     def on_login(self, item):
         item.state = not item.state
-        set_login_item(bool(item.state))
+        set_login_item(bool(item.state), self._language)
+
+    def on_english(self, _):
+        self._set_language("en")
+
+    def on_spanish(self, _):
+        self._set_language("es")
 
     def on_quit(self, _):
         rumps.quit_application()

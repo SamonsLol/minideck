@@ -2,7 +2,7 @@
    SPDX-FileCopyrightText: 2026 Samons */
 /* ============================================================
    MiniDeck — traducciones (es / en)
-   Idioma: localStorage "minideck-lang" o el del navegador.
+   Idioma: ?lang=, localStorage "minideck-lang" o el del navegador.
    Uso:  t("key")  ·  t("key", { n: 3 })  →  "{n}" se sustituye.
    HTML: <el data-i18n="key">  ·  data-i18n-title="key" (atributo title)
    Para añadir un idioma, añade un objeto más a STRINGS.
@@ -29,6 +29,7 @@
       "toast.saveLater": "Sin conexión: se guardará al reconectar",
       "toast.theme": "Tema: {name}",
       "toast.lang": "Idioma: Español",
+      "toast.searchingLyrics": "Buscando letra…",
       "toast.longHint": "Mantén pulsado para: {action}",
       "toast.exported": "Deck exportado",
       "toast.importBad": "Archivo no válido: {err}",
@@ -80,6 +81,22 @@
       "ip.none": "Sin resultados",
       "np.nothing": "Nada sonando",
       "np.lyrics": "Letra",
+      "np.untitled": "Sin título",
+      "np.lyricsTitle": "Letra",
+      "discord.connecting": "Conectando…",
+      "discord.muteMic": "Silenciar micro",
+      "discord.messagePlaceholder": "Mensaje al canal…",
+      "discord.send": "Enviar",
+      "discord.rpcDisconnected": "RPC desconectado",
+      "discord.noVoiceChannel": "Sin canal de voz",
+      "discord.rpcUnavailable": "Discord RPC no conectado (revisa server/config/discord.json)",
+      "discord.webhookRequired": "Configura el webhook del canal",
+      "mixer.noAudio": "Sin audio activo",
+      "mixer.mute": "Silenciar",
+      "profile.enabled": "Perfil por app: activado",
+      "profile.disabled": "Perfil por app: desactivado",
+      "theme.dark": "Oscuro",
+      "pwa.installPrompt": "Instala MiniDeck como app (pantalla completa).",
       "pair.title": "Emparejar MiniDeck",
       "pair.reason": "Este dispositivo aún no está autorizado.",
       "pair.invalid": "El código guardado ya no es válido.",
@@ -235,6 +252,7 @@
       "toast.saveLater": "Offline: will save when reconnected",
       "toast.theme": "Theme: {name}",
       "toast.lang": "Language: English",
+      "toast.searchingLyrics": "Finding lyrics…",
       "toast.longHint": "Long-press for: {action}",
       "toast.exported": "Deck exported",
       "toast.importBad": "Invalid file: {err}",
@@ -286,6 +304,22 @@
       "ip.none": "No results",
       "np.nothing": "Nothing playing",
       "np.lyrics": "Lyrics",
+      "np.untitled": "Untitled",
+      "np.lyricsTitle": "Lyrics",
+      "discord.connecting": "Connecting…",
+      "discord.muteMic": "Mute mic",
+      "discord.messagePlaceholder": "Message the channel…",
+      "discord.send": "Send",
+      "discord.rpcDisconnected": "RPC disconnected",
+      "discord.noVoiceChannel": "No voice channel",
+      "discord.rpcUnavailable": "Discord RPC isn't connected (check server/config/discord.json)",
+      "discord.webhookRequired": "Set up the channel webhook",
+      "mixer.noAudio": "No active audio",
+      "mixer.mute": "Mute",
+      "profile.enabled": "App-based profile: on",
+      "profile.disabled": "App-based profile: off",
+      "theme.dark": "Dark",
+      "pwa.installPrompt": "Install MiniDeck as an app (full screen).",
       "pair.title": "Pair MiniDeck",
       "pair.reason": "This device isn't authorized yet.",
       "pair.invalid": "The saved code is no longer valid.",
@@ -423,8 +457,43 @@
     },
   };
 
+  // De voorbeelddecks die MiniDeck meelevert, dateren van vóór de i18n-laag
+  // en bewaren hun Spaanse labels in deck.json. Vertaal alleen die bekende
+  // standaardteksten tijdens het weergeven; de opgeslagen deckinhoud en
+  // eigen namen van de gebruiker blijven altijd onaangeraakt.
+  const BUILTIN_DECK_LABELS = {
+    en: {
+      "Principal": "Home", "Multimedia": "Media", "Silenciar": "Mute",
+      "Volumen": "Volume", "Anterior": "Previous", "Play/Pausa": "Play/Pause",
+      "Siguiente": "Next", "Salida": "Output", "Micrófono": "Microphone",
+      "Capturas": "Screenshots", "Captura": "Screenshot", "Región": "Region",
+      "Ventana": "Window", "Completa": "Full screen", "Color píxel": "Pixel color",
+      "Desarrollo": "Development", "Proyecto": "Project", "Modo Trabajo": "Work mode",
+      "Comunicación": "Communication", "Micro": "Mic", "Micro OFF": "Mic off",
+      "Sordina": "Deafen", "Grabar": "Record", "Grabando": "Recording",
+      "Directo": "Live", "EN VIVO": "LIVE", "Mic OBS": "OBS mic", "Sistema": "System",
+      "Bloquear": "Lock", "Suspender": "Sleep", "Escritorio": "Desktop",
+      "Escritorios": "Desktops", "Papelera": "Trash", "Volver": "Back",
+      "Apagar": "Shut down", "Archivos": "Files", "Pantalla": "Screen",
+      "Recorte": "Snip", "Explorador": "Explorer", "Bloc de notas": "Notepad",
+      "Ajustes": "Settings", "Tareas": "Tasks", "IA": "AI",
+    },
+  };
+
   const KEY = "minideck-lang";
   function detect() {
+    // De menubalkapp opent de deck met ?lang=en of ?lang=es. Die expliciete
+    // keuze mag een oude browservoorkeur vervangen en wordt daarna bewaard.
+    try {
+      const requested = new URLSearchParams(location.search).get("lang");
+      if (requested && STRINGS[requested]) {
+        localStorage.setItem(KEY, requested);
+        const url = new URL(location.href);
+        url.searchParams.delete("lang");
+        history.replaceState(null, "", url);
+        return requested;
+      }
+    } catch {}
     try {
       const saved = localStorage.getItem(KEY);
       if (saved && STRINGS[saved]) return saved;
@@ -439,6 +508,10 @@
     let s = STRINGS[lang]?.[key] ?? STRINGS.es[key] ?? key;
     if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
     return s;
+  }
+
+  function deckText(text) {
+    return BUILTIN_DECK_LABELS[lang]?.[text] ?? text;
   }
 
   // Textos con <b>…</b> controlados por nosotros: se insertan como HTML.
@@ -462,7 +535,7 @@
   }
 
   window.MiniDeckI18n = {
-    t, apply, setLang,
+    t, deckText, apply, setLang,
     get lang() { return lang; },
     languages: Object.keys(STRINGS),
   };

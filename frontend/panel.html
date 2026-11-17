@@ -267,9 +267,48 @@
   </div>
 </div>
 
-<script src="auth.js?v=40"></script>
+<script src="i18n.js?v=47"></script>
+<script src="auth.js?v=41"></script>
 <script>
 const $ = id => document.getElementById(id);
+// The control panel predates the main i18n module.  Keep its vocabulary here
+// so all static and generated panel copy follows the same ES/EN preference.
+const PANEL_EN = {
+  'Panel de widgets personalizados': 'Custom widget panel', '＋ Nuevo widget': '＋ New widget',
+  'Código': 'Code', 'Nombre del widget': 'Widget name', 'Eliminar': 'Delete',
+  'Guardar (Ctrl+S)': 'Save (Ctrl+S)', '＋ Botón': '＋ Button', '＋ Texto en vivo': '＋ Live text',
+  'VISTA PREVIA': 'PREVIEW', '✕ Cerrar': '✕ Close', 'INSTALAR PLUGIN': 'INSTALL PLUGIN',
+  'INSTALADOS': 'INSTALLED', 'EXPLORAR': 'BROWSE', 'Instalar': 'Install', 'Cargando…': 'Loading…',
+  'Cargando catálogo…': 'Loading catalog…', 'Simple': 'Simple', 'Plugins': 'Plugins',
+  'DEPENDENCIAS PYTHON (pip)': 'PYTHON DEPENDENCIES (pip)',
+  'LIBRERÍAS EXTERNAS — una URL de CDN por línea (js/css), se cargan antes de tu JS':
+    'EXTERNAL LIBRARIES — one CDN URL per line (js/css), loaded before your JS',
+  'HTML — el diseño del widget': 'HTML — the widget layout',
+  'JS — el funcionamiento (recibe ctx)': 'JS — behavior (receives ctx)',
+  'CSS — los estilos': 'CSS — styles', 'BOTÓN': 'BUTTON', 'TEXTO EN VIVO': 'LIVE TEXT',
+  'Texto del botón': 'Button text', 'Emoji / icono': 'Emoji / icon', 'Qué hace': 'What it does',
+  'Etiqueta': 'Label', 'Dato a mostrar': 'Value to show', 'Guardar ajustes': 'Save settings',
+  'Ajustes': 'Settings', 'Activado': 'Enabled', 'Desinstalar': 'Uninstall', 'Necesita:': 'Requires:',
+  'Uno por línea.': 'One per line.', 'Mostrar / ocultar': 'Show / hide', 'Ver código': 'View code',
+  'Instalado ✓': 'Installed ✓', 'El catálogo está vacío.': 'The catalog is empty.',
+  'Solo para: ': 'Only for: ', 'de ': 'by ', 'Error: ': 'Error: ', 'Guardando…': 'Saving…',
+  'Guardado': 'Saved', 'Falta el id': 'An id is required', 'Vacío': 'Empty',
+};
+const PT = (text) => window.MiniDeckI18n.lang === 'en' ? (PANEL_EN[text] ?? text) : text;
+function localizePanel(root = document.body) {
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let node; (node = walk.nextNode());) {
+    if (node.parentElement?.closest('script, style, code, pre')) continue;
+    const text = node.nodeValue, trimmed = text.trim(), translated = PT(trimmed);
+    if (trimmed && translated !== trimmed) node.nodeValue = text.replace(trimmed, translated);
+  }
+  root.querySelectorAll?.('[placeholder], [title]').forEach((el) => {
+    if (el.placeholder) el.placeholder = PT(el.placeholder);
+    if (el.title) el.title = PT(el.title);
+  });
+  document.title = 'MiniDeck — ' + PT('Panel de widgets personalizados');
+}
+localizePanel();
 let widgets = {};
 let mode = 'simple';
 let bloques = [];           // definición del modo simple
@@ -335,7 +374,7 @@ function frow(labelTxt, inputEl) {
   const row = document.createElement('div');
   row.className = 'frow';
   const l = document.createElement('label');
-  l.textContent = labelTxt;
+  l.textContent = PT(labelTxt);
   row.append(l, inputEl);
   return row;
 }
@@ -349,7 +388,7 @@ function sel(ops, val, onchange) {
   const s = document.createElement('select');
   for (const [v, n] of ops) {
     const o = document.createElement('option');
-    o.value = v; o.textContent = n;
+    o.value = v; o.textContent = PT(n);
     s.appendChild(o);
   }
   s.value = val;
@@ -569,7 +608,7 @@ const plg = { plugins: [], canInstall: false, canPip: true, catalogo: null };
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
-  if (text !== undefined && text !== null) e.textContent = text;
+  if (text !== undefined && text !== null) e.textContent = PT(text);
   return e;
 }
 function boton(text, cls, onclick) {

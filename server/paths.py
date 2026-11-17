@@ -70,6 +70,9 @@ DEFAULT_CONFIG_PATH = next(
     DEFAULTS_DIR / "deck.default.json")
 TOKEN_PATH = CONFIG_DIR / "auth_token"
 DISCORD_CFG_PATH = CONFIG_DIR / "discord.json"
+# Voorkeur voor de taal van de native macOS-menubalkapp. Deze staat los van
+# deck.json zodat een gebruikersinterfacevoorkeur geen deck-wijziging wordt.
+DESKTOP_LANGUAGE_PATH = CONFIG_DIR / "desktop_language"
 
 # Iconos descargados (Iconify) para que el deck funcione sin internet.
 ICON_CACHE_DIR = Path(os.environ.get("MINIDECK_ICON_CACHE") or DATA_DIR / "icon-cache")
