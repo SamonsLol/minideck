@@ -9,6 +9,7 @@
 const $ = (id) => document.getElementById(id);
 // Traducción (i18n.js). Se llama T y no t para no chocar con variables locales.
 const T = (key, vars) => window.MiniDeckI18n.t(key, vars);
+const deckText = (text) => window.MiniDeckI18n.deckText(text);
 
 const state = {
   ws: null,
@@ -41,7 +42,7 @@ function registerWidget(type, def) {
 }
 
 function runAction(action, params) {
-  if (state.ws?.readyState !== WebSocket.OPEN) { toast("Sin conexión", true); return; }
+  if (state.ws?.readyState !== WebSocket.OPEN) { toast(T("toast.noConn"), true); return; }
   state.ws.send(JSON.stringify({ type: "run", action, params: params ?? {} }));
 }
 
@@ -203,7 +204,7 @@ function paintKey(el, btn, on) {
   const w = on ? btn.when : {};
   const color = w.color || btn.color || "#8a93a3";
   const icon = w.icon || btn.icon;
-  const label = w.label ?? btn.label ?? "";
+  const label = deckText(w.label ?? btn.label ?? "");
   const sig = `${icon}|${color}|${label}`;
   if (el.dataset.sig === sig) return;
   el.dataset.sig = sig;
@@ -333,7 +334,7 @@ function renderTabs() {
   for (const page of state.config.pages) {
     const tab = document.createElement("button");
     tab.className = "page-tab" + (page.id === state.currentPage ? " active" : "");
-    tab.textContent = page.name;
+    tab.textContent = deckText(page.name);
     tab.onclick = () => {
       const pages = state.config.pages;
       const cur = pages.findIndex(p => p.id === state.currentPage);
@@ -429,7 +430,7 @@ function buildKey(btn) {
 
   const label = document.createElement("span");
   label.className = "label";
-  label.textContent = btn.label ?? "";
+  label.textContent = deckText(btn.label ?? "");
 
   el.append(icon, label);
   if (btn.when?.key) {
@@ -495,7 +496,7 @@ function buildSlider(w) {
 
   const label = document.createElement("span");
   label.className = "slider-label";
-  label.textContent = w.label ?? "";
+  label.textContent = deckText(w.label ?? "");
 
   const value = document.createElement("span");
   value.className = "slider-value";
@@ -583,7 +584,7 @@ function buildNowPlaying(w) {
   el.querySelector(".np-lyrics").onclick = () => {
     if (state.ws?.readyState !== WebSocket.OPEN) return;
     state.ws.send(JSON.stringify({ type: "run", action: "lyrics_get", params: {} }));
-    toast("Buscando letra…", false);
+    toast(T("toast.searchingLyrics"), false);
   };
 
   const seek = el.querySelector(".np-seek");
@@ -646,7 +647,7 @@ function syncNowPlaying(np) {
     artist.textContent = "—";
     return;
   }
-  title.textContent = np.title || "Sin título";
+  title.textContent = np.title || T("np.untitled");
   artist.textContent = np.artist || "";
 
   // carátula: URL directa (np.artwork, de YouTube/Spotify) o /api/artwork (Windows).
@@ -750,7 +751,7 @@ function showLyrics(title, plain, synced) {
     panel.querySelector(".lyrics-close").onclick = closeLyrics;
     document.body.appendChild(panel);
   }
-  panel.querySelector(".lyrics-title").textContent = title || "Letra";
+  panel.querySelector(".lyrics-title").textContent = title || T("np.lyricsTitle");
   const body = panel.querySelector(".lyrics-body");
   body.innerHTML = "";
   clearInterval(lyr.timer);
@@ -822,16 +823,16 @@ function buildDiscord(w) {
       <span class="icon"></span>
       <div class="dc-chan">
         <div class="dc-title">${w.label || "Discord"}</div>
-        <div class="dc-sub">Conectando…</div>
+        <div class="dc-sub">${T("discord.connecting")}</div>
       </div>
-      <button class="dc-btn dc-mute" title="Silenciar micro"></button>
+      <button class="dc-btn dc-mute" title="${T("discord.muteMic")}" aria-label="${T("discord.muteMic")}"></button>
     </div>
     <div class="dc-members"></div>
     <div class="dc-quick"></div>
     <div class="dc-compose">
-      <input class="dc-input" type="text" placeholder="Mensaje al canal…"
+      <input class="dc-input" type="text" placeholder="${T("discord.messagePlaceholder")}" aria-label="${T("discord.messagePlaceholder")}"
              autocomplete="off" autocapitalize="sentences">
-      <button class="dc-btn dc-send" title="Enviar"></button>
+      <button class="dc-btn dc-send" title="${T("discord.send")}" aria-label="${T("discord.send")}"></button>
     </div>`;
 
   renderIcon(el.querySelector(".dc-head .icon"), "simple-icons:discord",
@@ -840,18 +841,18 @@ function buildDiscord(w) {
   renderIcon(el.querySelector(".dc-send"), "lucide:send", "#e8ecf2");
 
   const run = (action, params) => {
-    if (state.ws?.readyState !== WebSocket.OPEN) { toast("Sin conexión", true); return; }
+    if (state.ws?.readyState !== WebSocket.OPEN) { toast(T("toast.noConn"), true); return; }
     state.ws.send(JSON.stringify({ type: "run", action, params }));
   };
 
   el.querySelector(".dc-mute").onclick = () => {
     if (state.discord?.connected) run("discord_mute", {});
     else if (p.muteKeys) run("hotkey", { keys: p.muteKeys });
-    else toast("Discord RPC no conectado (revisa server/config/discord.json)", true);
+    else toast(T("discord.rpcUnavailable"), true);
   };
 
   const sendMsg = (content) => {
-    if (!p.webhook) { toast("Configura el webhook del canal", true); return; }
+    if (!p.webhook) { toast(T("discord.webhookRequired"), true); return; }
     if (!content.trim()) return;
     run("discord_webhook", { url: p.webhook, content,
                              username: p.username || "MiniDeck" });
@@ -886,9 +887,9 @@ function syncDiscord(d) {
   el.querySelector(".dc-mute").classList.toggle("on", !!d.mute);
 
   const sub = el.querySelector(".dc-sub");
-  sub.textContent = !d.connected ? "RPC desconectado"
+  sub.textContent = !d.connected ? T("discord.rpcDisconnected")
                   : d.channel ? d.channel
-                  : "Sin canal de voz";
+                  : T("discord.noVoiceChannel");
 
   const box = el.querySelector(".dc-members");
   box.innerHTML = "";
@@ -911,7 +912,7 @@ function buildMixer(w) {
   el.style.setProperty("--led", w.color || "#fbbf24");
   el.innerHTML = `
     <div class="mx-rows">
-      <div class="mx-empty">Sin audio activo</div>
+      <div class="mx-empty">${T("mixer.noAudio")}</div>
     </div>`;
   if (state.mixer) syncMixer(state.mixer);
   return el;
@@ -927,7 +928,7 @@ function buildMixerRow(app) {
   row.className = "mx-row";
   row.dataset.app = app.app;
   row.innerHTML = `
-    <button class="mx-mute" title="Silenciar"></button>
+    <button class="mx-mute" title="${T("mixer.mute")}" aria-label="${T("mixer.mute")}"></button>
     <div class="mx-info">
       <div class="mx-top">
         <span class="mx-name"></span>
@@ -1867,7 +1868,7 @@ function applyTheme(t) {
   else document.documentElement.removeAttribute("data-theme");
   try { localStorage.setItem("minideck-theme", t); } catch (e) {}
   $("themeBtn").classList.toggle("active", t === "lcd");
-  toast(T("toast.theme", { name: t === "lcd" ? "LCD" : (MiniDeckI18n.lang === "es" ? "Oscuro" : "Dark") }), false);
+  toast(T("toast.theme", { name: t === "lcd" ? "LCD" : T("theme.dark") }), false);
 }
 function toggleTheme() {
   const i = THEMES.indexOf(currentTheme());
@@ -1935,7 +1936,7 @@ function flashPageName(name) {
   let el = document.querySelector(".page-flash");
   if (!el) { el = document.createElement("div"); el.className = "page-flash";
              document.body.appendChild(el); }
-  el.textContent = name;
+  el.textContent = deckText(name);
   el.classList.add("show");
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove("show"), 650);
@@ -2008,7 +2009,7 @@ function toggleAutoProfile() {
   state.autoProfile = !state.autoProfile;
   try { localStorage.setItem("minideck-autoprofile", state.autoProfile ? "1" : "0"); } catch (e) {}
   $("profileBtn").classList.toggle("active", state.autoProfile);
-  toast(state.autoProfile ? "Perfil por app: activado" : "Perfil por app: desactivado", false);
+  toast(T(state.autoProfile ? "profile.enabled" : "profile.disabled"), false);
   _lastApp = null;                      // fuerza reevaluar al reactivar
 }
 
@@ -2065,9 +2066,7 @@ MiniDeckAuth.ensure().then((token) => {
     e.preventDefault();
     if (standalone || !b) return;
     const btn = $("a2hsInstall");
-    $("a2hsText").textContent = MiniDeckI18n.lang === "es"
-      ? "Instala MiniDeck como app (pantalla completa)."
-      : "Install MiniDeck as an app (full screen).";
+    $("a2hsText").textContent = T("pwa.installPrompt");
     btn.style.display = "";
     btn.onclick = async () => {
       btn.disabled = true;

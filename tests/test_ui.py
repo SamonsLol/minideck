@@ -216,9 +216,31 @@ def test_language_toggle(browser, server):
     ctx, page, _ = _open(browser, server, lang="en")
     assert page.locator("#langBtn").inner_text() == "EN"
     assert page.locator("#editBtn").get_attribute("title") == "Edit deck"
+    assert page.evaluate("MiniDeckI18n.deckText('Principal')") == "Home"
     page.click("#langBtn")
     assert page.locator("#langBtn").inner_text() == "ES"
     assert page.locator("#editBtn").get_attribute("title") == "Editar deck"
+    assert page.evaluate("MiniDeckI18n.deckText('Principal')") == "Principal"
+    ctx.close()
+
+
+def test_language_query_overrides_a_saved_choice(browser, server):
+    ctx, page, _ = _open(browser, server, lang="es")
+    page.goto(f"{server}/?lang=en")
+    assert page.locator("#langBtn").inner_text() == "EN"
+    assert page.locator("#editBtn").get_attribute("title") == "Edit deck"
+    assert page.evaluate("localStorage.getItem('minideck-lang')") == "en"
+    ctx.close()
+
+
+def test_control_panel_uses_the_active_language(browser, server):
+    ctx = browser.new_context(locale="en")
+    ctx.add_init_script("localStorage.setItem('minideck-lang', 'en')")
+    page = ctx.new_page()
+    page.goto(server + "/panel.html")
+    assert page.title() == "MiniDeck — Custom widget panel"
+    assert page.locator("#mCode").inner_text() == "Code"
+    assert page.locator("#plgInstallBtn").inner_text() == "Install"
     ctx.close()
 
 

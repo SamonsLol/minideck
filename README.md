@@ -37,7 +37,7 @@ Issues and PRs are welcome in English or Spanish.
 - **Phone as webcam**: stream the phone's camera to the PC and use it in OBS, Zoom, Meet or Discord ([how](#phone-as-webcam)).
 - **Visual editor** right on the phone: pages, icons (Lucide), colors, drag and drop, **undo**, and deck **import/export**.
 - **Works offline on your LAN**: icons are cached by the server after first use.
-- **Spanish and English** UI (tap **ES/EN** in the top bar).
+- **Spanish and English** UI (tap **ES/EN** in the top bar; on macOS, choose a language from the MiniDeck menu-bar app too).
 - **Works without JavaScript**: `/basic` is a server-rendered version with plain links and forms (use the deck, folders, long press, sliders, OBS, Home Assistant, and a full deck editor). Browsers without JS land there automatically; JavaScript only adds real-time updates, drag and drop and animations.
 - **Plugins** in Python + JS, plus custom widgets built in the Control Panel (`/panel.html`).
 - **Secure QR pairing**: nobody else on your network can control your computer.

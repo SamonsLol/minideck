@@ -37,7 +37,7 @@ Se aceptan issues y PRs en español o en inglés.
 - **El móvil como webcam**: transmite la cámara del teléfono al PC y úsala en OBS, Zoom, Meet o Discord ([cómo](#el-móvil-como-webcam)).
 - **Editor visual** desde el propio móvil: páginas, iconos (Lucide), colores, arrastrar y soltar, **deshacer** e **importar/exportar** decks.
 - **Funciona sin internet en tu red local**: el servidor guarda los iconos en caché tras el primer uso.
-- Interfaz en **español e inglés** (botón **ES/EN** de la barra superior).
+- Interfaz en **español e inglés** (botón **ES/EN** de la barra superior; en macOS también desde el menú de MiniDeck).
 - **Funciona sin JavaScript**: `/basic` es una versión renderizada en el servidor con enlaces y formularios normales (usar el deck, carpetas, pulsación larga, sliders, OBS, Home Assistant y un editor completo del deck). Los navegadores sin JS llegan ahí solos; JavaScript solo añade el tiempo real, arrastrar y soltar y las animaciones.
 - **Plugins** en Python + JS, y widgets personalizados desde el Panel de Control (`/panel.html`).
 - **Emparejamiento seguro** por QR: nadie más en tu red puede controlar tu equipo.

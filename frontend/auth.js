@@ -48,7 +48,7 @@
     return read();
   }
 
-  // Traducción si i18n.js está cargado (el panel no lo carga: queda en español).
+  // Translation when i18n.js is loaded (both the deck and control panel load it).
   const tr = (k, v, fallback) =>
     window.MiniDeckI18n ? window.MiniDeckI18n.t(k, v) : fallback;
 
